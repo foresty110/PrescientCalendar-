@@ -44,7 +44,9 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      # --ignore-scripts: pnpm 11이 ignored build scripts를 error로 처리하는 것 회피.
+      # prebuilt 바이너리(sharp, esbuild)는 그대로 동작. Prisma client만 명시 generate.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - run: pnpm prisma generate
 

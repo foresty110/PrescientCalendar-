@@ -21,7 +21,7 @@
 - [x] 3.1 채팅으로 단건 회고 기록 — `record_actual_run` 도구 + IDOR 방어 UPSERT
 - [x] 3.2 채팅으로 일괄 회고 — `list_pending_retros` 도구 + retrospect 프롬프트 시스템 결합
 - [x] 3.3 상태(완료/스킵/지연) 자동 추론 + 사용자 확인 — 프롬프트 절대 규칙으로 강제
-- [ ] 3.4 캘린더 셀 클릭 → 빠른 입력 모달 (보조 UI) — PR B 예정
+- [x] 3.4 캘린더 이벤트 chip 클릭 → 빠른 입력 모달 (보조 UI). 과거 일정만 클릭 가능, 회고된 항목은 emerald, 회고 필요는 amber 색
 - [x] 3.5 회고 통계 채팅 질의 — `query_user_pattern` 도구 (실행률·평균 지연, 키워드/eventId 매칭)
 
 ## 4. 실현 가능성 예측

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
+import { RetrospectModal, type RetrospectModalTarget } from "@/components/RetrospectModal";
+
 const KST = "Asia/Seoul";
 
 interface ScheduledRunItem {
@@ -11,6 +13,11 @@ interface ScheduledRunItem {
   scheduledStartAt: string; // ISO
   scheduledDurationMin: number;
   feasibilityScore: number | null;
+  actualRun?: {
+    actualStartAt: string;
+    actualDurationMin: number;
+    status: "done" | "skipped" | "late";
+  };
 }
 
 interface CalendarProps {
@@ -23,6 +30,8 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
   const [items, setItems] = useState<ScheduledRunItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [localRefresh, setLocalRefresh] = useState(0);
+  const [retroTarget, setRetroTarget] = useState<RetrospectModalTarget | null>(null);
 
   // ISO 문자열로 메모이즈 — Date 객체 ID 안정화 (무한 refetch 방지)
   const range = useMemo(() => {
@@ -58,7 +67,7 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
     return () => {
       cancelled = true;
     };
-  }, [range, refreshKey]);
+  }, [range, refreshKey, localRefresh]);
 
   const days = monthGrid(now);
 
@@ -104,15 +113,39 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
             >
               <div className="mb-1 text-right">{formatInTimeZone(d.date, KST, "d")}</div>
               <ul className="space-y-0.5">
-                {dayItems.slice(0, 3).map((it) => (
-                  <li
-                    key={it.scheduledRunId}
-                    className="truncate rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                    title={`${formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm")} ${it.title}`}
-                  >
-                    {formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm")} {it.title}
-                  </li>
-                ))}
+                {dayItems.slice(0, 3).map((it) => {
+                  const isPast = new Date(it.scheduledStartAt).getTime() <= now.getTime();
+                  const hasRetro = !!it.actualRun;
+                  return (
+                    <li key={it.scheduledRunId}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setRetroTarget({
+                            scheduledRunId: it.scheduledRunId,
+                            title: it.title,
+                            scheduledStartAt: it.scheduledStartAt,
+                            scheduledDurationMin: it.scheduledDurationMin,
+                            ...(it.actualRun ? { existing: it.actualRun } : {}),
+                          })
+                        }
+                        disabled={!isPast}
+                        className={
+                          "block w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] " +
+                          (hasRetro
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                            : isPast
+                              ? "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:hover:bg-amber-900/60"
+                              : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200") +
+                          (isPast ? " cursor-pointer" : " cursor-default")
+                        }
+                        title={`${formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm")} ${it.title}${hasRetro ? " (회고됨)" : isPast ? " (회고 필요)" : ""}`}
+                      >
+                        {formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm")} {it.title}
+                      </button>
+                    </li>
+                  );
+                })}
                 {dayItems.length > 3 && (
                   <li className="text-[10px] text-slate-400">+{dayItems.length - 3}</li>
                 )}
@@ -121,6 +154,12 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
           );
         })}
       </div>
+
+      <RetrospectModal
+        target={retroTarget}
+        onClose={() => setRetroTarget(null)}
+        onSaved={() => setLocalRefresh((k) => k + 1)}
+      />
     </div>
   );
 }

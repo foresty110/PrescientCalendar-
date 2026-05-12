@@ -85,8 +85,13 @@ export const listEventsTool = defineTool({
     to: isoDateTime,
     withActualRun: z.boolean().optional().default(false),
   }),
-  handler: (_input, _ctx) =>
-    Promise.reject(new Error("list_events: not yet implemented (Step 5)")),
+  handler: async (input, ctx) => {
+    return events.listScheduledRuns(ctx.userId, {
+      from: new Date(input.from),
+      to: new Date(input.to),
+      withActualRun: input.withActualRun ?? false,
+    });
+  },
 });
 
 export const updateEventTool = defineTool({

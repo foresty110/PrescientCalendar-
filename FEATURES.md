@@ -4,10 +4,10 @@
 
 ## 1. 사용자 계정 (로그인)
 - [x] 1.1 Google OAuth 로그인 화면 (`/signin`)
-- [ ] 1.2 세션 발급 + 쿠키 저장 (Auth.js v5, DB session) — 코드 완료, OAuth 자격증명 입력 후 실측 필요
+- [x] 1.2 세션 발급 + 쿠키 저장 (Auth.js v5, DB session)
 - [x] 1.3 로그아웃 (`/app` 우상단 버튼)
-- [x] 1.4 미로그인 시 보호 라우트 접근 차단 (`src/middleware.ts`)
-- [ ] 1.5 모든 도메인 쿼리에 userId 필터 + IDOR 방어 (`getCurrentUserId`, `assertOwnership` 헬퍼 준비됨, 도메인 쿼리는 Step 4부터)
+- [x] 1.4 미로그인 시 보호 라우트 접근 차단 (`src/middleware.ts`, 이중 가드)
+- [ ] 1.5 모든 도메인 쿼리에 userId 필터 + IDOR 방어 (헬퍼 준비됨, 도메인 쿼리 추가될 때마다 검증)
 
 ## 2. 대화형 일정 잡기
 - [ ] 2.1 단발 일정 생성 ("내일 3시에 운동 1시간")

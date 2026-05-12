@@ -66,6 +66,59 @@ export async function createEvent(
   };
 }
 
+export interface ScheduledRunListItem {
+  scheduledRunId: string;
+  eventId: string;
+  title: string;
+  scheduledStartAt: Date;
+  scheduledDurationMin: number;
+  feasibilityScore: number | null;
+  actualRun?: {
+    actualStartAt: Date;
+    actualDurationMin: number;
+    status: "done" | "skipped" | "late";
+  };
+}
+
+/**
+ * from~to 범위의 ScheduledRun 조회. 캘린더 표시 + LLM 컨텍스트용.
+ * userId 필터 필수. include로 N+1 방지.
+ */
+export async function listScheduledRuns(
+  userId: string,
+  params: { from: Date; to: Date; withActualRun?: boolean },
+): Promise<ScheduledRunListItem[]> {
+  const rows = await prisma.scheduledRun.findMany({
+    where: {
+      userId,
+      scheduledStartAt: { gte: params.from, lte: params.to },
+    },
+    include: {
+      event: { select: { id: true, title: true } },
+      actualRun: params.withActualRun ? true : false,
+    },
+    orderBy: { scheduledStartAt: "asc" },
+  });
+
+  return rows.map((r) => ({
+    scheduledRunId: r.id,
+    eventId: r.event.id,
+    title: r.event.title,
+    scheduledStartAt: r.scheduledStartAt,
+    scheduledDurationMin: r.scheduledDurationMin,
+    feasibilityScore: r.feasibilityScore,
+    ...(params.withActualRun && r.actualRun
+      ? {
+          actualRun: {
+            actualStartAt: r.actualRun.actualStartAt,
+            actualDurationMin: r.actualRun.actualDurationMin,
+            status: r.actualRun.status,
+          },
+        }
+      : {}),
+  }));
+}
+
 async function findConflicts(userId: string, startAt: Date, durationMin: number) {
   const endAt = new Date(startAt.getTime() + durationMin * 60_000);
   const rows = await prisma.scheduledRun.findMany({

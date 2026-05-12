@@ -27,10 +27,14 @@ export type PromptName = "scheduler" | "retrospect" | "feasibility" | "next-week
 
 /**
  * 시스템 프롬프트 + 런타임 컨텍스트(현재 시각·타임존).
- * 같은 prompt name + 같은 시각이면 결과 동일 → 캐싱과 잘 맞음.
+ *
+ * 여러 mode를 동시에 활성화하려면 배열을 전달. 도구 호출 패턴이 모드 구분을
+ * 자연스럽게 처리한다(plan §Step 4 참고). 같은 names+시각이면 결과 동일 →
+ * 프롬프트 캐싱과 잘 맞음.
  */
-export function buildSystemPrompt(name: PromptName, now: Date): string {
-  const base = loadPrompt(name);
+export function buildSystemPrompt(names: PromptName | PromptName[], now: Date): string {
+  const list = Array.isArray(names) ? names : [names];
+  const sections = list.map(loadPrompt).join("\n\n---\n\n");
   const context = [
     "",
     "---",
@@ -39,5 +43,5 @@ export function buildSystemPrompt(name: PromptName, now: Date): string {
     `- 타임존: ${KST}`,
     `- ISO 입력 시 \`+09:00\` offset 권장`,
   ].join("\n");
-  return base + context;
+  return sections + context;
 }

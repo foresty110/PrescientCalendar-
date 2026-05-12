@@ -1,4 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// tools.ts가 import하는 db 체인이 next-auth를 거쳐 next/server 까지 끌어옴.
+// 이 테스트는 schema·메타데이터만 검증하므로 handler 의존성은 mock으로 끊는다.
+vi.mock("@/lib/db/events", () => ({}));
+vi.mock("@/lib/db/runs", () => ({}));
+vi.mock("@/lib/db/patterns", () => ({}));
+
 import {
   ALL_TOOLS,
   toAnthropicTools,

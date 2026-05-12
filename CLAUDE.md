@@ -16,10 +16,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    ```
 
 4. **Git 컨벤션**: 모든 커밋·푸시·PR은 `docs/git.md`의 규칙을 따른다. 핵심:
-   - **main 직접 커밋 금지**. 작업 시작 전 `git branch --show-current`로 확인하고, main이면 먼저 `git checkout -b <type>/<slug>` (feat/fix/docs/chore/refactor/test/perf/build/ci)
+   - **main 직접 커밋 금지**. 작업 시작 전 `git branch --show-current`로 확인하고, main이면 먼저 `git pull --ff-only origin main` 후 `git checkout -b <type>/<slug>` (feat/fix/docs/chore/refactor/test/perf/build/ci)
    - 커밋 메시지는 **Conventional Commits**: `<type>(<scope>?): <subject>`. 본문에 Why 적기 (What은 diff에서 보임)
+   - **PR 생성 전 자가 검증 필수**: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` 모두 통과 후에만 PR 생성
+   - **PR 크기**: 추가+삭제 300줄 또는 파일 10개 초과면 분할 권유
+   - **PR self-review**: 생성 후 GitHub UI에서 diff 한 번 읽기 (console.log·시크릿·디버그 잔재 점검). 발견 시 같은 브랜치에 후속 커밋
+   - **시크릿 사고**: `.env` 등 실수 푸시 시 **즉시 키 회전·폐기**가 history 청소보다 우선
    - 푸시: 기능 브랜치는 자유롭게 push, **main으로의 직접 push는 사용자 명시 승인 후에만**
    - PR은 `gh pr create`로 생성, **머지는 사용자가** GitHub UI에서 (또는 명시 승인 시 `gh pr merge --squash --delete-branch`)
+   - **PR 생성 후 보고 형식**: `docs/git.md §12`의 표준 포맷 (링크 + 변경 요약 3줄 + CI 상태 + 다음 단계)
 
 ## 프로젝트
 

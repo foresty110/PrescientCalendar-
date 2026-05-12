@@ -15,6 +15,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    저장할까요? (1) 저장 (2) 수정해서 저장 (3) 건너뛰기
    ```
 
+4. **Git 컨벤션**: 모든 커밋·푸시·PR은 `docs/git.md`의 규칙을 따른다. 핵심:
+   - **main 직접 커밋 금지**. 작업 시작 전 `git branch --show-current`로 확인하고, main이면 먼저 `git checkout -b <type>/<slug>` (feat/fix/docs/chore/refactor/test/perf/build/ci)
+   - 커밋 메시지는 **Conventional Commits**: `<type>(<scope>?): <subject>`. 본문에 Why 적기 (What은 diff에서 보임)
+   - 푸시: 기능 브랜치는 자유롭게 push, **main으로의 직접 push는 사용자 명시 승인 후에만**
+   - PR은 `gh pr create`로 생성, **머지는 사용자가** GitHub UI에서 (또는 명시 승인 시 `gh pr merge --squash --delete-branch`)
+
 ## 프로젝트
 
 **Prescient Calendar** — 자연어로 일정을 만들고, 회고하고, 다음 주를 예측하는 AI 캘린더.
@@ -65,6 +71,7 @@ tests/e2e/              # Playwright
 | 요구사항 / 시나리오 | `docs/requirements.md`, `docs/scenarios.md` |
 | LLM 도구 계약 | `docs/llm-tools.md` |
 | 알려진 리스크 | `docs/risks.md` |
+| Git 컨벤션 · 브랜치 · PR | `docs/git.md` |
 
 ## 권한 / 위험 작업
 

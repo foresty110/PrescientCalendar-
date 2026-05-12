@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
 const KST = "Asia/Seoul";
@@ -24,32 +24,41 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const monthStart = startOfKstMonth(now);
-  const monthEnd = endOfKstMonth(now);
-
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        from: monthStart.toISOString(),
-        to: monthEnd.toISOString(),
-        withActualRun: "true",
-      });
-      const res = await fetch(`/api/events?${params.toString()}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = (await res.json()) as { items: ScheduledRunItem[] };
-      setItems(data.items);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "조회 실패");
-    } finally {
-      setLoading(false);
-    }
-  }, [monthStart, monthEnd]);
+  // ISO 문자열로 메모이즈 — Date 객체 ID 안정화 (무한 refetch 방지)
+  const range = useMemo(() => {
+    return {
+      fromIso: startOfKstMonth(now).toISOString(),
+      toIso: endOfKstMonth(now).toISOString(),
+    };
+  }, [now]);
 
   useEffect(() => {
-    void fetchEvents();
-  }, [fetchEvents, refreshKey]);
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    const params = new URLSearchParams({
+      from: range.fromIso,
+      to: range.toIso,
+      withActualRun: "true",
+    });
+    fetch(`/api/events?${params.toString()}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return (await res.json()) as { items: ScheduledRunItem[] };
+      })
+      .then((data) => {
+        if (!cancelled) setItems(data.items);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "조회 실패");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [range, refreshKey]);
 
   const days = monthGrid(now);
 

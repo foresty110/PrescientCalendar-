@@ -1,2 +1,33 @@
+# IDE
 .idea/
+.vscode/
+*.iml
+
+# Node / Next.js
+node_modules/
+.next/
 out/
+dist/
+build/
+
+# 환경 변수
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# 로그·캐시
+*.log
+.DS_Store
+coverage/
+playwright-report/
+test-results/
+.turbo/
+
+# Prisma
+prisma/*.db
+prisma/migrations/dev-*/
+
+# OpenAPI 생성물은 커밋 (포트폴리오 가시성 위해)
+# openapi.json — 커밋 OK

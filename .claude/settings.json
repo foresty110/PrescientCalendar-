@@ -1,0 +1,49 @@
+{
+  "$schema": "https://claude.ai/schemas/settings.json",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat FEATURES.md 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"$CLAUDE_TOOL_FILE_PATH\" in *.ts|*.tsx) pnpm exec tsc --noEmit -p . 2>&1 | tail -20 || true ;; prisma/schema.prisma) echo '⚠️  schema 변경됨 — pnpm prisma migrate dev 실행 필요' ;; esac"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm typecheck && pnpm lint 2>&1 | tail -30 || echo '⚠️  typecheck/lint 실패 — 응답에 명시하고 다음 턴에 수정'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \"$CLAUDE_TOOL_INPUT\" in *prisma*migrate*reset*|*db*push*force-reset*|*'rm -rf'*) echo 'BLOCK: 위험한 명령. 사용자 확인 후 진행' >&2; exit 1 ;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}

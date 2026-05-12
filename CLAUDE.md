@@ -2,10 +2,72 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Status
+## 가장 먼저 — 매 요청마다 지킬 규칙
 
-Pre-implementation. The repository currently contains only IntelliJ IDEA project scaffolding (`.idea/`, `PrescientCalendar.iml`) — no source code, build configuration, README, or dependency manifest exists yet. The IntelliJ module is declared as `GENERAL_MODULE` (language-agnostic), so the target language and toolchain have not been chosen.
+1. **기능 추적**: 사용자 요청을 받으면 먼저 `FEATURES.md`에서 해당 항목을 찾아 "X.Y 항목 진행할게요"라고 명시한 뒤 시작한다. 항목이 없으면 만들지 말지 사용자에게 먼저 묻는다. 작업 완료 후 해당 줄을 `[ ]` → `[x]`로 갱신한다.
 
-When source, a README, or a build file (`pom.xml`, `build.gradle*`, `package.json`, `pyproject.toml`, etc.) is added, expand this file with:
-- The actual build / test / run commands once a toolchain exists.
-- The high-level architecture once there are multiple files whose relationships aren't obvious from reading any single one.
+2. **가드레일 셀프체크**: 작업을 완료 보고하기 전 `docs/guardrails.md` 체크리스트를 셀프 점검하고, 적용 결과를 응답에 명시한다.
+
+3. **자동 기록 (ADR / 트러블슈팅)**: 작업 중 (a) 두 가지 이상 접근 중 하나를 선택했거나 새 의존성을 도입했거나 (b) 30분 이상 디버깅한 이슈가 있으면, 템플릿으로 초안을 작성해 사용자에게 보여주고 승인 후에만 `docs/decisions/` 또는 `docs/troubleshooting/`에 저장한다. 형식:
+   ```
+   📝 로그 후보: <decisions|troubleshooting> · docs/.../YYYY-MM-DD-<slug>.md
+   <초안>
+   저장할까요? (1) 저장 (2) 수정해서 저장 (3) 건너뛰기
+   ```
+
+## 프로젝트
+
+**Prescient Calendar** — 자연어로 일정을 만들고, 회고하고, 다음 주를 예측하는 AI 캘린더.
+
+기능 5개: 로그인 / 대화형 일정 / 대화형 회고 / 실현 가능성 / 다음 주 예측. 세부는 `FEATURES.md`.
+
+## Stack
+- Next.js 15 App Router, TypeScript strict, Tailwind
+- Postgres + Prisma
+- Auth.js v5 (Google OAuth, DB session)
+- Anthropic Claude API (prompt caching, tool use)
+- Vitest, Playwright
+
+## 명령어
+- `pnpm dev` — 개발 서버
+- `pnpm build` / `pnpm start`
+- `pnpm typecheck` — `tsc --noEmit`
+- `pnpm lint`
+- `pnpm test` — Vitest 유닛
+- `pnpm test:e2e` — Playwright
+- `pnpm sanity` — LLM 동작 sanity check
+- `pnpm db:migrate` / `pnpm db:seed`
+- `pnpm openapi:gen` — Zod → openapi.json
+
+## 디렉터리
+
+```
+src/app/                # App Router (page, route handlers)
+src/lib/db/             # Prisma 함수 — route handler는 여기로만 접근
+src/lib/llm/            # Anthropic SDK, tools, prompts/, agent
+src/lib/time.ts         # KST↔UTC 변환 헬퍼
+src/components/         # React 컴포넌트
+prisma/schema.prisma    # DB 스키마 (도메인 + Auth.js)
+docs/                   # 모든 문서 (아래 라우팅 표 참조)
+scripts/                # sanity.ts, gen-openapi.ts
+tests/e2e/              # Playwright
+.claude/                # Claude Code 하네스
+```
+
+## 참고 문서 라우팅
+
+| 작업 영역 | 먼저 읽을 문서 |
+|---|---|
+| 코드 작업 전반 (FE/BE/DB/LLM/테스트/시간대) | `docs/development.md` |
+| API 컨벤션 (에러·페이지네이션·인증) | `docs/api.md` |
+| 보안·성능·예외처리 셀프체크 | `docs/guardrails.md` |
+| 도메인 모델·용어 | `docs/domain.md` |
+| 요구사항 / 시나리오 | `docs/requirements.md`, `docs/scenarios.md` |
+| LLM 도구 계약 | `docs/llm-tools.md` |
+| 알려진 리스크 | `docs/risks.md` |
+
+## 권한 / 위험 작업
+
+- DB 재설정·force-reset 류는 사용자 확인 후에만 (`.claude/settings.json`의 PreToolUse hook이 confirm 요구)
+- `.env`·secret 커밋 금지
+- 의존성 추가 시 ADR 후보로 등록

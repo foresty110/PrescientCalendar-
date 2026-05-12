@@ -11,7 +11,7 @@
 
 ## 2. 대화형 일정 잡기
 - [x] 2.1 단발 일정 생성 ("내일 3시에 운동 1시간") — DB 검증 완료
-- [ ] 2.2 반복 일정 생성 ("매주 화 9시 회의") — `createEvent`에 recurrence 입력 가능하나 인스턴스 펼치기는 첫 1개만, 다중 인스턴스 생성 필요
+- [x] 2.2 반복 일정 생성 ("매주 화 9시 회의") — `expandRecurrence`가 DAILY/WEEKLY/MONTHLY를 4주 horizon 내 펼침, transaction으로 다중 ScheduledRun 일괄 생성 (`createEvent` `occurrencesPlanned` 반환)
 - [ ] 2.3 일정 수정 (대화로 — "그거 4시로 옮겨줘") — `update_event` 도구 stub
 - [ ] 2.4 일정 삭제 (대화로) — `delete_event` 도구 stub
 - [ ] 2.5 모호한 입력 시 재질문 ("나중에 운동" → 시각 확정 질문) — 프롬프트로 유도, 실측 필요

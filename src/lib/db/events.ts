@@ -1,17 +1,16 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/db/client";
 import { fromKstInput } from "@/lib/time";
+import { expandRecurrence, type Recurrence } from "@/lib/recurrence";
 
-export type Recurrence = {
-  freq: "DAILY" | "WEEKLY" | "MONTHLY";
-  byDay?: ("MO" | "TU" | "WE" | "TH" | "FR" | "SA" | "SU")[];
-  until?: string;
-} | null | undefined;
+export type { Recurrence } from "@/lib/recurrence";
 
 export interface CreateEventInput {
   title: string;
   startAt: string;
   durationMin: number;
-  recurrence?: Recurrence;
+  recurrence?: Recurrence | null;
 }
 
 export interface CreateEventResult {
@@ -21,11 +20,17 @@ export interface CreateEventResult {
   conflictWarning?: { scheduledRunId: string; title: string; startAt: Date }[];
 }
 
+/** 반복 인스턴스를 한 번에 펼칠 horizon (주). 추후 사용자 설정 가능하게 보강 가능 */
+const RECURRENCE_HORIZON_WEEKS = 4;
+
 /**
- * 새 Event + 첫 ScheduledRun 생성.
+ * 새 Event + 반복 펼친 모든 ScheduledRun 생성.
  *
- * Step 4 단계의 최소 구현 — 반복 일정은 첫 인스턴스만 생성 (전체 펼치기는 Step 5에서 보강).
- * 충돌 감지·재확인 흐름은 시스템 프롬프트가 안내.
+ * recurrence가 있으면 expandRecurrence로 첫 4주치 인스턴스 전부 생성.
+ * 모든 row를 한 transaction에 묶어 부분 실패 시 롤백.
+ *
+ * 충돌 감지는 첫 인스턴스(startAt) 기준만 — LLM이 사용자에게 확인 후 진행하는
+ * 패턴이라 충돌 시 assistant가 사용자 의사 묻고 재호출.
  */
 export async function createEvent(
   userId: string,
@@ -40,28 +45,43 @@ export async function createEvent(
 
   const conflict = await findConflicts(userId, startAt, input.durationMin);
 
-  const event = await prisma.event.create({
-    data: {
-      userId,
-      title: input.title,
-      defaultDurationMin: input.durationMin,
-      recurrence: input.recurrence ? input.recurrence : undefined,
-    },
+  const instances = expandRecurrence(startAt, input.recurrence ?? null, {
+    now,
+    horizonWeeks: RECURRENCE_HORIZON_WEEKS,
   });
 
-  const scheduledRun = await prisma.scheduledRun.create({
-    data: {
-      userId,
-      eventId: event.id,
-      scheduledStartAt: startAt,
-      scheduledDurationMin: input.durationMin,
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    const event = await tx.event.create({
+      data: {
+        userId,
+        title: input.title,
+        defaultDurationMin: input.durationMin,
+        recurrence: input.recurrence
+          ? (input.recurrence as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+      },
+    });
+
+    const created = await Promise.all(
+      instances.map((scheduledStartAt) =>
+        tx.scheduledRun.create({
+          data: {
+            userId,
+            eventId: event.id,
+            scheduledStartAt,
+            scheduledDurationMin: input.durationMin,
+          },
+        }),
+      ),
+    );
+
+    return { event, firstScheduledRun: created[0]! };
   });
 
   return {
-    eventId: event.id,
-    firstScheduledRunId: scheduledRun.id,
-    occurrencesPlanned: 1,
+    eventId: result.event.id,
+    firstScheduledRunId: result.firstScheduledRun.id,
+    occurrencesPlanned: instances.length,
     ...(conflict.length > 0 ? { conflictWarning: conflict } : {}),
   };
 }

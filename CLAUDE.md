@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 4. **Git 컨벤션**: 모든 커밋·푸시·PR은 `docs/git.md`의 규칙을 따른다. 핵심:
    - **main 직접 커밋 금지**. 작업 시작 전 `git branch --show-current`로 확인하고, main이면 먼저 `git pull --ff-only origin main` 후 `git checkout -b <type>/<slug>` (feat/fix/docs/chore/refactor/test/perf/build/ci)
-   - 커밋 메시지는 **Conventional Commits**: `<type>(<scope>?): <subject>`. 본문에 Why 적기 (What은 diff에서 보임)
+   - 커밋 메시지는 **Conventional Commits (scope 미사용)**: `<type>: <subject>`. 제목엔 What + Why ("이 커밋을 적용하면 …이 된다"가 자연스럽게 읽혀야 함). 본문은 '왜 필요했는지'에 집중하고 숫자·근거 포함 (`200ms → 30ms`, `테스트 +3` 형식). 자세히는 `docs/git.md §2`
    - **PR 생성 전 자가 검증 필수**: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` 모두 통과 후에만 PR 생성
    - **PR 크기**: 추가+삭제 300줄 또는 파일 10개 초과면 분할 권유
    - **PR self-review**: 생성 후 GitHub UI에서 diff 한 번 읽기 (console.log·시크릿·디버그 잔재 점검). 발견 시 같은 브랜치에 후속 커밋

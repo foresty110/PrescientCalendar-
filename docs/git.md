@@ -20,47 +20,88 @@ main  ────●────●────●────●────�
 - 작업 1단위 = 1 브랜치 = 1 PR (가능한 작게 유지)
 - 브랜치는 머지 후 삭제
 
-## 2. 커밋 메시지 — Conventional Commits
+## 2. 커밋 메시지 — Conventional Commits (scope 미사용)
 
 ```
-<type>(<scope>?): <subject>
+<type>: <subject>
 
 <body, optional>
 
 <footer, optional>
 ```
 
+> **scope는 사용하지 않는다.** 제목이 충분히 구체적이면 어느 영역인지 자연스럽게 드러난다. scope를 강제하면 모호한 분류(`feat(common):` 등)가 늘어 가치가 떨어짐.
+
 ### Types
 
 | Type | 의미 | 예시 |
 |---|---|---|
-| `feat` | 새 기능 | `feat(retrospect): list_pending_retros 도구 구현` |
-| `fix` | 버그 수정 | `fix(calendar): 무한 refetch 제거` |
-| `docs` | 문서만 변경 | `docs(git): 컨벤션 추가` |
-| `style` | 포매팅·세미콜론 등 (로직 변경 X) | `style: prettier 적용` |
-| `refactor` | 동작 변경 없는 코드 정리 | `refactor(llm): 도구 등록 패턴 분리` |
-| `test` | 테스트만 변경 | `test(time): KST 변환 케이스 추가` |
-| `perf` | 성능 개선 | `perf(events): @@index 추가로 N+1 제거` |
-| `build` | 빌드 시스템·의존성 | `build: Next 15→16 업그레이드` |
-| `ci` | CI 설정 | `ci: pnpm cache 추가` |
+| `feat` | 새 기능 | `feat: 대화형 회고 일괄 트리거 추가` |
+| `fix` | 버그 수정 | `fix: 캘린더 무한 refetch 제거` |
+| `docs` | 문서만 변경 | `docs: git 컨벤션에 §2 철학 추가` |
+| `style` | 포매팅 (로직 변경 X) | `style: prettier 적용` |
+| `refactor` | 동작 변경 없는 코드 정리 | `refactor: LLM 도구 등록 패턴 분리` |
+| `test` | 테스트만 변경 | `test: KST 변환 케이스 추가` |
+| `perf` | 성능 개선 | `perf: events.findMany N+1 제거` |
+| `build` | 빌드 시스템·의존성 | `build: Next 15에서 16으로 업그레이드` |
+| `ci` | CI 설정 | `ci: pnpm action 버전 충돌 해결` |
 | `chore` | 그 외 잡일 (FEATURES 갱신 등) | `chore: FEATURES 2.1 체크` |
 
-### Scope (선택)
+### Subject 규칙 — **What + Why를 담는다**
 
-도메인 또는 영역. 예: `auth`, `calendar`, `chat`, `llm`, `db`, `prisma`, `middleware`, `api`, `tools`, `prompts`, `time`, `ui`.
+How(구현 방법·코드 변경 내역)는 diff에서 보인다. 제목엔 **어디서·무엇을·왜**를 압축해서 적는다.
 
-### Subject 규칙
+#### 명령형 검증법
+
+머릿속으로 *"이 커밋을 적용하면 [제목]이 된다"* 를 붙여보고 자연스러우면 통과:
+
+- ✅ `fix: 캘린더 무한 refetch 제거`
+  → "이 커밋을 적용하면 *캘린더 무한 refetch 제거*가 된다" — 자연스럽게 읽힘
+- ✅ `feat: 대화형 회고 일괄 트리거 추가`
+  → "이 커밋을 적용하면 *대화형 회고 일괄 트리거 추가*가 된다" — OK
+- ❌ `fix: 캘린더를 수정했다`
+  → 과거형 + 무엇·왜 부재
+- ❌ `chore: 코드 정리`
+  → 어디서·무엇이 빠짐
+
+#### 그 외 규칙
 
 - 한국어 / 영어 혼용 OK (이 프로젝트는 한국어 우선)
 - **소문자**로 시작, **마침표 X**
-- **명령형**: "추가한다" 보다 "추가" / "add"
-- 50자 이내 권장
+- 길이 가이드: **한국어 30자 / 영어 50자** 이내 (한국어 정보 밀도가 높음)
 
-### Body
+### Body — **'왜 필요했는지'에 집중 + 숫자·근거**
 
-- 본문 줄바꿈 권장 (72자)
-- **What보다 Why** — 무엇을 했는지는 diff에서 보임. 왜 했는지가 가치
-- 트레이드오프·대안·제약 명시
+본문은 trivial(타이포·포매팅) 변경엔 생략 OK. **비자명한 결정·트레이드오프·외부 의존성 도입** 시 필수.
+
+#### 1) Why에 집중
+
+무엇을 했는지는 제목 + diff로 충분. 본문 첫 문장은 **이 변경이 왜 필요했는지**:
+
+> 회고를 채팅으로 자연스럽게 기록할 통로 부재가 문제. 캘린더 셀 모달은 한 번에 한 건만 가능 + 일정에 안 잡힌 즉흥 회고를 받지 못함.
+
+#### 2) 숫자·근거 포함 (정량적 표현이 신뢰감을 만든다)
+
+| ❌ 모호 | ✅ 정량 |
+|---|---|
+| "성능 개선" | "쿼리 시간 200ms → 30ms (n=1000)" |
+| "코드 많이 줄였다" | "코드 줄 수 −40% (450 → 270)" |
+| "테스트 추가" | "테스트 +5 케이스 (KST 변환 엣지)" |
+| "버그 발생률 감소" | "프로덕션 에러율 2.3% → 0.1%" |
+| "메모리 절약" | "RSS 380MB → 190MB" |
+
+벤치마크 없는 변경은 측정 안 했음을 솔직히 적기 ("정성 평가만 — 사용자 인식 속도 체감 개선") 가 모호한 자랑보다 낫다.
+
+#### 3) 트레이드오프·대안 거부 이유
+
+받아들인 단점·기각한 옵션이 있으면 명시:
+
+> JWT 대신 DB session 선택. 즉시 취소(로그아웃·관리자 강제) 가능이 성능 차이(평균 +8ms)보다 중요.
+
+#### 4) 형식
+
+- 72자 줄바꿈
+- 단락별로 한 줄 띄우기
 
 ### Footer
 
@@ -114,13 +155,16 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 
 좋은 커밋:
 ```
-feat(retrospect): record_actual_run 도구 구현
+feat: 대화형 회고 record_actual_run 도구 추가
 
-list_pending_retros로 미회고 ScheduledRun을 가져온 뒤 순차 record_actual_run
-호출 가능. UPSERT 패턴으로 같은 ScheduledRun에 재기록 허용.
+회고를 채팅으로 자연스럽게 기록할 통로 부재가 문제. 캘린더 셀 모달은
+한 번에 한 건만 + 일정에 안 잡힌 즉흥 회고를 못 받음. 도구를 LLM 에이전트에
+노출해서 자연어 한 줄로 처리.
 
-assertOwnership으로 IDOR 방어. 도구 입력에 scheduledRunId 받지만 핸들러가
-항상 currentUserId 검증.
+assertOwnership으로 IDOR 방어 (scheduledRunId 입력 받지만 핸들러가
+항상 currentUserId 매칭 검증). 도구 호출 1회 평균 320ms (n=20).
+
+테스트 +3 케이스 (단건 / 중복 / 권한 없음).
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 ```
@@ -130,6 +174,11 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 Update files               # 어디·무엇·왜 다 없음
 WIP                        # 임시 커밋 (PR squash 전엔 OK, main에는 X)
 Fix bug                    # 어느 버그인지 불명
+docs(git): 갱신            # scope 사용 — 새 규칙에 어긋남
+fix: 버그 수정             # 어디·무엇·왜 모두 부재
+refactor: 함수 정리        # 명령형이지만 What·Why 모두 모호
+perf: 빠르게 만듦          # 숫자 없음 — 본문에 측정치 필수
+chore: 코드 정리           # "이 커밋을 적용하면 …이 된다" 통과 X
 ```
 
 ## 6. `.gitignore` 정책 + 시크릿 사고 대응

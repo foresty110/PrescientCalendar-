@@ -11,6 +11,8 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import type Anthropic from "@anthropic-ai/sdk";
 
 import * as events from "@/lib/db/events";
+import * as runs from "@/lib/db/runs";
+import * as patterns from "@/lib/db/patterns";
 
 // ---------------------------------------------------------------------------
 // Tool 정의 헬퍼
@@ -131,8 +133,14 @@ export const recordActualRunTool = defineTool({
     actualDurationMin: z.number().int().min(0).max(720),
     status: z.enum(["done", "skipped", "late"]),
   }),
-  handler: (_input, _ctx) =>
-    Promise.reject(new Error("record_actual_run: not yet implemented (Step 6)")),
+  handler: async (input, ctx) => {
+    return runs.recordActualRun(ctx.userId, {
+      scheduledRunId: input.scheduledRunId,
+      actualStartAt: new Date(input.actualStartAt),
+      actualDurationMin: input.actualDurationMin,
+      status: input.status,
+    });
+  },
 });
 
 export const listPendingRetrosTool = defineTool({
@@ -142,8 +150,13 @@ export const listPendingRetrosTool = defineTool({
     from: isoDateTime,
     to: isoDateTime,
   }),
-  handler: (_input, _ctx) =>
-    Promise.reject(new Error("list_pending_retros: not yet implemented (Step 6)")),
+  handler: async (input, ctx) => {
+    return runs.listPendingRetros(ctx.userId, {
+      from: new Date(input.from),
+      to: new Date(input.to),
+      now: ctx.now,
+    });
+  },
 });
 
 export const queryUserPatternTool = defineTool({
@@ -156,8 +169,13 @@ export const queryUserPatternTool = defineTool({
     since: isoDateTime,
     until: isoDateTime.optional(),
   }),
-  handler: (_input, _ctx) =>
-    Promise.reject(new Error("query_user_pattern: not yet implemented (Step 6)")),
+  handler: async (input, ctx) => {
+    return patterns.queryUserPattern(ctx.userId, {
+      eventIdOrKeyword: input.eventIdOrKeyword,
+      since: new Date(input.since),
+      ...(input.until ? { until: new Date(input.until) } : {}),
+    });
+  },
 });
 
 export const computeFeasibilityTool = defineTool({

@@ -13,6 +13,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import * as events from "@/lib/db/events";
 import * as runs from "@/lib/db/runs";
 import * as patterns from "@/lib/db/patterns";
+import { computeFeasibility, persistFeasibilityScore } from "@/lib/db/feasibility";
 
 // ---------------------------------------------------------------------------
 // Tool 정의 헬퍼
@@ -187,8 +188,16 @@ export const computeFeasibilityTool = defineTool({
   inputSchema: z.object({
     scheduledRunId: z.string(),
   }),
-  handler: (_input, _ctx) =>
-    Promise.reject(new Error("compute_feasibility: not yet implemented (Step 7)")),
+  handler: async (input, ctx) => {
+    const result = await computeFeasibility(ctx.userId, input.scheduledRunId, ctx.now);
+    // 재계산 결과를 ScheduledRun에 갱신 — 다음 조회 시 캘린더가 최신값 보게
+    await persistFeasibilityScore(input.scheduledRunId, result);
+    return {
+      score: result.score,
+      rationale: result.rationale,
+      dataInsufficient: result.dataInsufficient,
+    };
+  },
 });
 
 // ---------------------------------------------------------------------------

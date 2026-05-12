@@ -131,7 +131,7 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
                         }
                         disabled={!isPast}
                         className={
-                          "block w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] " +
+                          "flex w-full items-center gap-1 truncate rounded px-1.5 py-0.5 text-left text-[10px] " +
                           (hasRetro
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
                             : isPast
@@ -139,9 +139,12 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
                               : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200") +
                           (isPast ? " cursor-pointer" : " cursor-default")
                         }
-                        title={`${formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm")} ${it.title}${hasRetro ? " (회고됨)" : isPast ? " (회고 필요)" : ""}`}
+                        title={feasibilityTooltip(it, isPast, hasRetro)}
                       >
-                        {formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm")} {it.title}
+                        <FeasibilityBadge score={it.feasibilityScore} />
+                        <span className="truncate">
+                          {formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm")} {it.title}
+                        </span>
                       </button>
                     </li>
                   );
@@ -162,6 +165,44 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
       />
     </div>
   );
+}
+
+function FeasibilityBadge({ score }: { score: number | null }) {
+  // null → 데이터 부족 회색. 점수에 따라 red→amber→green 그라데이션.
+  if (score === null) {
+    return (
+      <span
+        className="inline-block h-2 w-2 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600"
+        aria-label="실현 가능성 — 데이터 부족"
+      />
+    );
+  }
+  const color =
+    score >= 70
+      ? "bg-emerald-500"
+      : score >= 50
+        ? "bg-amber-500"
+        : "bg-red-500";
+  return (
+    <span
+      className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`}
+      aria-label={`실현 가능성 ${score}점`}
+    />
+  );
+}
+
+function feasibilityTooltip(
+  it: ScheduledRunItem,
+  isPast: boolean,
+  hasRetro: boolean,
+): string {
+  const time = formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm");
+  const status = hasRetro ? " (회고됨)" : isPast ? " (회고 필요)" : "";
+  const score =
+    it.feasibilityScore === null
+      ? " · 실현 가능성: 데이터 부족"
+      : ` · 실현 가능성 ${it.feasibilityScore}점`;
+  return `${time} ${it.title}${status}${score}`;
 }
 
 function startOfKstMonth(d: Date): Date {

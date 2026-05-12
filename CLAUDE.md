@@ -8,7 +8,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 2. **가드레일 셀프체크**: 작업을 완료 보고하기 전 `docs/guardrails.md` 체크리스트를 셀프 점검하고, 적용 결과를 응답에 명시한다.
 
-3. **자동 기록 (ADR / 트러블슈팅)**: 작업 중 (a) 두 가지 이상 접근 중 하나를 선택했거나 새 의존성을 도입했거나 (b) 30분 이상 디버깅한 이슈가 있으면, 템플릿으로 초안을 작성해 사용자에게 보여주고 승인 후에만 `docs/decisions/` 또는 `docs/troubleshooting/`에 저장한다. 형식:
+3. **자동 기록 (ADR / 트러블슈팅)**: 작업 중 다음 신호가 하나라도 보이면 템플릿으로 초안을 작성해 사용자에게 보여주고 승인 후에만 `docs/decisions/` 또는 `docs/troubleshooting/`에 저장한다.
+   - **ADR 후보**: 두 가지 이상 접근 중 하나를 선택했음 / 새 의존성을 도입함 / 명시적 트레이드오프를 받아들임
+   - **트러블슈팅 후보 (신호 우선, 시간은 보조)**:
+     - 표면 증상과 실제 원인이 다름 (예: 로컬 통과 ≠ CI 실패)
+     - 한 이슈에 두 개 이상의 fix 시도가 필요했음 (가설→기각→다음 가설)
+     - 환경 특유 문제 (Docker, CI, Prisma migrate, OAuth 콜백, deploy)
+     - 라이브러리 버그·제약 회피
+     - 또는 30분 이상 디버깅
+   - **자기 점검**: 각 fix 직후 "이건 표면 증상이었나? 가설을 몇 개 거쳤나?"를 자문. 시간이 짧았더라도 신호가 있으면 로그감.
+   - 형식:
    ```
    📝 로그 후보: <decisions|troubleshooting> · docs/.../YYYY-MM-DD-<slug>.md
    <초안>

@@ -4,7 +4,7 @@
 
 | 날짜 | 이슈 | 영역 |
 |---|---|---|
-| _아직 없음_ | | |
+| 2026-05-12 | [Edge 미들웨어가 DB 세션 쿠키를 JWT로 디코딩하려다 무한 루프](2026-05-12-edge-middleware-db-session-jwe-error.md) | Auth.js v5 + middleware |
 
 ## 작성법
 - 파일명: `YYYY-MM-DD-slug.md` (예: `2026-05-20-prisma-migrate-on-vercel.md`)

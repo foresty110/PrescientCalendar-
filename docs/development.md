@@ -97,6 +97,15 @@ src/
 - 다크모드: Tailwind `dark:` (system 설정 따름)
 - 접근성: 인터랙티브 요소는 `aria-label`, 키보드 탭 순서, 포커스 표시
 
+## 5b. Auth.js v5 (Google OAuth, DB session) — 미들웨어 패턴
+
+**중요**: DB session 전략에서는 미들웨어가 세션을 직접 검증할 수 없다 (Edge runtime은 Prisma 어댑터 사용 불가). 따라서:
+
+- **`src/middleware.ts`** — 세션 쿠키(`authjs.session-token` 또는 `__Secure-authjs.session-token`)의 **존재 여부만** 검사하고 미인증 시 `/signin`으로 리다이렉트. `NextAuth(authConfig)` 호출 금지 (JWT 디코딩 실패로 무한 루프 발생).
+- **서버 컴포넌트 / Route Handler** — `await auth()` 또는 `await getCurrentUserId()`로 **실제 세션 검증** (full Node runtime, Prisma 어댑터 포함).
+
+이 이중 가드 패턴은 `docs/guardrails.md` 보안 체크리스트로도 강제. 사례는 `docs/troubleshooting/2026-05-12-edge-middleware-db-session-jwe-error.md` 참조.
+
 ## 6. 시간대
 
 - DB: **UTC** (Prisma `DateTime` 기본 UTC 저장)

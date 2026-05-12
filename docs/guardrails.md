@@ -6,6 +6,7 @@
 - [ ] 외부 입력은 Zod 검증 (route handler 진입점)
 - [ ] DB는 Prisma 클라이언트만 사용 (raw query 금지, 필요 시 매개변수 바인딩)
 - [ ] 인증된 경로는 `getCurrentUserId()` + **IDOR 방어** (`scheduledRunId` 등 ID 입력 시 항상 `assertOwnership(row, userId)` 또는 `where: { id, userId }`)
+- [ ] 보호 라우트는 **이중 가드**: 미들웨어는 쿠키 존재만 체크, 서버 컴포넌트·route handler는 `await auth()` 또는 `getCurrentUserId()`로 실제 검증 (DB session + Edge runtime 호환)
 - [ ] 시크릿·PII는 로그·에러 응답에 노출 금지 (스택트레이스 사용자 노출 X)
 - [ ] LLM tool_use 인자는 Zod safeParse 통과 후 DB 반영
 - [ ] `dangerouslySetInnerHTML` 금지 (필요 시 DOMPurify)

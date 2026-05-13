@@ -10,7 +10,7 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/", "/signin", "/api/auth", "/api/docs"];
+const PUBLIC_PATHS = ["/", "/signin", "/api/auth", "/api/docs", "/openapi.json"];
 
 const SESSION_COOKIE_NAMES = [
   "authjs.session-token",

@@ -1,22 +1,19 @@
 /**
- * Zod 스키마 → openapi.json 생성. `pnpm openapi:gen` 으로 실행.
- * /api/docs 라우트가 이 파일을 읽어 Scalar 페이지를 렌더.
+ * Zod 스키마 → openapi.json. `pnpm openapi:gen` 으로 실행.
+ *
+ * Scalar 페이지(/api/docs)가 빌드된 public/openapi.json을 fetch해서 렌더링한다.
+ * 라우트나 스키마를 바꾼 뒤 이 스크립트를 다시 돌리고 결과를 커밋한다.
  */
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
-// TODO: Step 5 라우트 추가 이후 OpenAPI 레지스트리 채우기.
-// import { OpenAPIRegistry, OpenApiGeneratorV31 } from "@asteasolutions/zod-to-openapi";
+import { buildOpenApiDoc } from "../src/lib/openapi";
 
-import { writeFileSync } from "node:fs";
-
-const placeholder = {
-  openapi: "3.1.0",
-  info: {
-    title: "Prescient Calendar API",
-    version: "0.1.0",
-    description: "구현 진행 중 — 라우트 추가 시 자동 갱신",
-  },
-  paths: {},
-};
-
-writeFileSync("openapi.json", JSON.stringify(placeholder, null, 2));
-console.log("openapi.json 생성 완료 (placeholder)");
+const doc = buildOpenApiDoc();
+const out = join(process.cwd(), "public", "openapi.json");
+/* eslint-disable security/detect-non-literal-fs-filename --
+   out 경로는 process.cwd() 기반 빌드 출력 — 외부 입력 아님 */
+mkdirSync(dirname(out), { recursive: true });
+writeFileSync(out, JSON.stringify(doc, null, 2));
+/* eslint-enable security/detect-non-literal-fs-filename */
+console.log(`openapi.json 생성: ${out}`);

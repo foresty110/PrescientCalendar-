@@ -16,10 +16,12 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
-    {
-      name: "mobile",
-      use: { ...devices["iPhone SE"] },
-    },
+    // 모바일 반응형은 보류 (docs/decisions/2026-05-13-defer-mobile-responsive.md).
+    // dormant 유지 — 부활 시 아래 블록 주석 해제.
+    // {
+    //   name: "mobile",
+    //   use: { ...devices["iPhone SE"] },
+    // },
   ],
   webServer: {
     command: "pnpm dev",

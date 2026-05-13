@@ -76,23 +76,9 @@
 - [ ] 캘린더 셀에 점수에 따라 색상/뱃지
 - [ ] 같은 시간대 ±1h ActualRun 5건 미만이면 "데이터 부족" 회색
 
-## 5. 다음 주 예측 캘린더
-**목적**: 사용자의 회고 패턴 + 반복 일정에서 다음 주 일정을 자동 제안.
+## MVP 범위 외
 
-**범위(In Scope)**:
-- 결정론 단계: recurrence 있는 Event는 그대로 복사
-- LLM 단계: 회고 패턴에서 새 제안 발굴
-- 별도 뷰 `/next-week` — 일반/AI 제안 구분
-- 수락 시 실제 ScheduledRun 생성
-
-**범위 밖**:
-- 자동 푸시 알림
-- 매일 단위 예측
-
-**완료 기준**:
-- [ ] 반복 일정 fixture → 다음 주에 동일 복사 확인
-- [ ] LLM 제안은 회색 톤 + "AI 제안" 뱃지
-- [ ] 수락 버튼으로 ScheduledRun 생성
+- **다음 주 예측 캘린더** — `docs/decisions/2026-05-13-exclude-next-week-prediction.md` 참조. Prisma `Prediction` 모델·`prompts/next-week.md`는 schema dormant로 유지 (추후 부활 시 빠르게 재활성)
 
 ## 비기능 요구사항
 

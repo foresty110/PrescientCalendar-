@@ -8,7 +8,7 @@
 | `Event` | 사용자가 정의한 일정 템플릿 (반복 규칙 포함) | id, **userId**, title, recurrence?, defaultDurationMin |
 | `ScheduledRun` | Event의 특정 시점 인스턴스 (예: 6/3 화요일 7AM 조깅) | id, **userId**, eventId, scheduledStartAt, scheduledDurationMin, feasibilityScore?, feasibilityModelVersion?, feasibilityComputedAt? |
 | `ActualRun` | ScheduledRun의 실제 실행 기록 (1:1) | id, **userId**, scheduledRunId (UNIQUE), actualStartAt, actualDurationMin, status |
-| `Prediction` | 다음 주 예측 캘린더용 제안 | id, **userId**, suggestedStartAt, basisEventId?, feasibility, status |
+| `Prediction` *(MVP 제외 — schema dormant)* | 다음 주 예측 캘린더용 제안. Feature 5 부활 시 재활성 | id, **userId**, suggestedStartAt, basisEventId?, feasibility, status |
 
 ### Auth.js 표준 테이블 (Prisma 어댑터 요구)
 - `Account` — OAuth 제공자별 토큰 (Google access/refresh, expires)
@@ -39,7 +39,7 @@ Prediction.status: pending | accepted | rejected
 - **지연 (Late)** — 예정 시각보다 X분 이상 늦게 시작한 상태 (cutoff는 도구 인자로 받음, 기본 10분)
 - **스킵 (Skipped)** — 일정을 아예 실행하지 않은 상태
 - **데이터 부족 (Cold start)** — 같은 시간대 ±1h ActualRun 5건 미만 또는 가입 2주 이내. feasibility는 회색 처리
-- **예측 (Prediction)** — 사용자 패턴에서 발굴된 "다음 주 이렇게 해보세요" 제안. 사용자가 수락해야 실제 ScheduledRun이 됨
+- **예측 (Prediction)** *(MVP 제외)* — 사용자 패턴에서 발굴된 "다음 주 이렇게 해보세요" 제안. Feature 5가 MVP 범위 외라 현재 미사용 (`docs/decisions/2026-05-13-exclude-next-week-prediction.md`)
 
 ## 시간대 정책
 

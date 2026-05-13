@@ -54,6 +54,8 @@ const ChatMessage = z
     example: { role: "user", content: "내일 오후 3시 운동 1시간" },
   });
 
+// 의도적으로 .openapi({ example }) 미부착 — Scalar try-it-out에 자동 채워진
+// 샘플 본문이 보이지 않게 해 클릭 유인을 줄임 (LLM 비용 차단 보조 장치).
 const ChatRequest = z
   .object({
     messages: z.array(ChatMessage).min(1).max(50),
@@ -61,7 +63,6 @@ const ChatRequest = z
   .openapi({
     description:
       "지금까지의 대화 메시지 전체. 서버가 일정 잡기·회고·실현 가능성 모드를 자동 라우팅한다.",
-    example: { messages: [{ role: "user", content: "내일 오후 3시 운동 1시간" }] },
   });
 
 const ChatResponse = z
@@ -87,7 +88,12 @@ registry.registerPath({
   tags: ["대화"],
   summary: "자연어로 일정 만들기·회고·실현 가능성 질의",
   description:
+    "> ⚠️ **이 엔드포인트는 호출당 Anthropic Claude API 비용(약 ₩1~10)이 발생합니다.**\n" +
+    "> 이 페이지의 try-it-out 대신 실제 채팅 UI(`/app`)에서 검증하세요. 이 섹션은 입출력 형식·예제 확인용입니다.\n\n" +
     "사용자 채팅 메시지를 받아 LLM 에이전트가 도구(일정 CRUD·회고 기록·통계·실현 가능성)를 호출하고 결과를 텍스트로 응답한다. 인증 필수 (세션 쿠키).",
+  // 의도적으로 빈 servers — try-it-out이 호출할 서버 없음 → Send 버튼 무력화.
+  // 비용 발생 가능한 엔드포인트는 문서만 보이고 인터랙티브 호출은 차단.
+  servers: [],
   request: {
     body: {
       content: { "application/json": { schema: ChatRequest } },

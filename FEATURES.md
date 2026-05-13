@@ -13,8 +13,8 @@
 ## 2. 대화형 일정 잡기
 - [x] 2.1 단발 일정 생성 ("내일 3시에 운동 1시간") — DB 검증 완료
 - [x] 2.2 반복 일정 생성 ("매주 화 9시 회의") — `expandRecurrence`가 DAILY/WEEKLY/MONTHLY를 4주 horizon 내 펼침, transaction으로 다중 ScheduledRun 일괄 생성 (`createEvent` `occurrencesPlanned` 반환)
-- [ ] 2.3 일정 수정 (대화로 — "그거 4시로 옮겨줘") — `update_event` 도구 stub
-- [ ] 2.4 일정 삭제 (대화로) — `delete_event` 도구 stub
+- [x] 2.3 일정 수정 — `update_event` 도구 실구현. recurrence 변경 시 회고 없는 미래 ScheduledRun 재생성, 회고된 미래·과거 인스턴스 보존. (시각 자체 이동은 `delete + create` 조합)
+- [x] 2.4 일정 삭제 — `delete_event` 도구 실구현. scope=`all` 전체 cascade, `future_only`는 회고 없는 미래만
 - [ ] 2.5 모호한 입력 시 재질문 ("나중에 운동" → 시각 확정 질문) — 프롬프트로 유도, 실측 필요
 - [ ] 2.6 시간 충돌 경고 — `conflictWarning` 반환은 구현, LLM 흐름 검증 필요
 

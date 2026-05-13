@@ -39,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Prescient Calendar** — 자연어로 일정을 만들고, 회고하고, 다음 주를 예측하는 AI 캘린더.
 
-기능 5개: 로그인 / 대화형 일정 / 대화형 회고 / 실현 가능성 / 다음 주 예측. 세부는 `FEATURES.md`.
+기능 4개: 로그인 / 대화형 일정 / 대화형 회고 / 실현 가능성. (다음 주 예측은 MVP 제외 — `docs/decisions/2026-05-13-exclude-next-week-prediction.md`) 세부는 `FEATURES.md`.
 
 ## Stack
 - Next.js 15 App Router, TypeScript strict, Tailwind

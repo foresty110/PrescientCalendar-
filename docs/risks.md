@@ -25,11 +25,10 @@
 - 임계값: 같은 시간대 ±1h ActualRun 5건 미만 또는 가입 2주 이내
 
 ## 회고 데이터 cold start
-**위험**: 가입 직후 2주는 feasibility·다음주 예측이 무의미.
+**위험**: 가입 직후 2주는 feasibility가 무의미.
 
 **완화**:
-- feasibility는 회색 처리
-- 다음 주 예측은 결정론(recurrence 복사)만 동작, LLM 제안은 4주치 데이터 모인 뒤부터
+- feasibility는 회색 처리 (`docs/development.md` §5b 참조)
 
 ## IDOR (다른 사용자 데이터 접근)
 **위험**: `record_actual_run(scheduledRunId)` 같은 도구에서 다른 사용자의 ID를 넣으면 데이터가 새거나 변조됨.

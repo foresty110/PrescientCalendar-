@@ -1,3 +1,4 @@
+
 # Prescient Calendar — Features
 
 > 사용자 요청을 받으면 Claude는 작업 시작 전에 항상 이 파일에서 해당 항목을 찾아 "X.Y 항목 진행할게요"라고 명시한다. 완료 후 `[ ]` → `[x]`로 갱신한다.
@@ -29,12 +30,6 @@
 - [x] 4.2 점수와 근거 캘린더에 표시 — chip 좌측 색 점 (green ≥70 / amber ≥50 / red < 50) + tooltip 근거
 - [x] 4.3 "이거 가능할까?" 대화 질의 — `compute_feasibility` 도구 + feasibility.md 프롬프트 결합
 - [x] 4.4 데이터 부족 시 회색 처리 — 표본 < 5건 또는 가입 < 14일이면 score=null, slate-300 점
-
-## 5. 다음 주 예측 캘린더
-- [ ] 5.1 결정론: recurrence 있는 Event는 다음 주 인스턴스 자동 생성
-- [ ] 5.2 LLM 제안: 회고 패턴 기반 새 일정 제안 (회색 톤 + "AI 제안" 뱃지)
-- [ ] 5.3 별도 뷰 `/next-week`
-- [ ] 5.4 제안 수락/거절 UI, 수락 시 실제 ScheduledRun 생성
 
 ## 인프라·포트폴리오
 - [ ] I.1 GitHub Actions CI (typecheck/lint/test/build) 초록 배지

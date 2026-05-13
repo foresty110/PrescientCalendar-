@@ -5,6 +5,7 @@
 | 날짜 | 결정 | 상태 |
 |---|---|---|
 | 2026-05-13 | [다음 주 예측 캘린더(Feature 5)를 MVP 범위에서 제외](2026-05-13-exclude-next-week-prediction.md) | 채택 |
+| 2026-05-13 | [모바일 반응형을 보류하고 데스크탑 웹 단일 타겟으로 우선 출시](2026-05-13-defer-mobile-responsive.md) | 채택 |
 
 ## 작성법
 - 파일명: `YYYY-MM-DD-slug.md` (예: `2026-05-13-event-vs-scheduledrun-split.md`)

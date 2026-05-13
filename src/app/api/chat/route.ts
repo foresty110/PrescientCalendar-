@@ -27,8 +27,9 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date();
-    // 단일 채팅에서 일정 잡기 + 회고 둘 다 처리. 도구 호출 패턴으로 모드 구분.
-    const systemPrompt = buildSystemPrompt(["scheduler", "retrospect"], now);
+    // 단일 채팅에서 scheduling + retrospect + feasibility를 모두 처리.
+    // 도구 호출 패턴으로 모드 구분 (plan §Step 4 라우터 미사용 원칙).
+    const systemPrompt = buildSystemPrompt(["scheduler", "retrospect", "feasibility"], now);
 
     const trace = await runAgent({
       userId,

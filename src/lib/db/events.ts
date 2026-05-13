@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { fromKstInput } from "@/lib/time";
 import { expandRecurrence, type Recurrence } from "@/lib/recurrence";
+import { computeFeasibility, persistFeasibilityScore } from "@/lib/db/feasibility";
 
 export type { Recurrence } from "@/lib/recurrence";
 
@@ -77,6 +78,15 @@ export async function createEvent(
 
     return { event, firstScheduledRun: created[0]! };
   });
+
+  // 첫 인스턴스에 대해 feasibility 자동 산출 + 저장. cold start면 score=null로 회색 처리.
+  // 실패는 무시 (event 생성 자체는 성공) — 점수는 보조 정보.
+  try {
+    const feasibility = await computeFeasibility(userId, result.firstScheduledRun.id, now);
+    await persistFeasibilityScore(result.firstScheduledRun.id, feasibility);
+  } catch {
+    // 점수 산출은 best-effort. 실패해도 이벤트 자체는 유효
+  }
 
   return {
     eventId: result.event.id,

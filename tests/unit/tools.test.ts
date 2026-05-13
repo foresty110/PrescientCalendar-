@@ -5,6 +5,10 @@ import { describe, it, expect, vi } from "vitest";
 vi.mock("@/lib/db/events", () => ({}));
 vi.mock("@/lib/db/runs", () => ({}));
 vi.mock("@/lib/db/patterns", () => ({}));
+vi.mock("@/lib/db/feasibility", () => ({
+  computeFeasibility: vi.fn(),
+  persistFeasibilityScore: vi.fn(),
+}));
 
 import {
   ALL_TOOLS,

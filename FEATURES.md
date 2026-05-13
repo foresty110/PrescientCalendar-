@@ -25,10 +25,10 @@
 - [x] 3.5 회고 통계 채팅 질의 — `query_user_pattern` 도구 (실행률·평균 지연, 키워드/eventId 매칭)
 
 ## 4. 실현 가능성 예측
-- [ ] 4.1 일정 생성 시 점수 자동 산출
-- [ ] 4.2 점수와 근거 캘린더에 표시 (색상/뱃지)
-- [ ] 4.3 "이거 가능할까?" 대화 질의
-- [ ] 4.4 데이터 부족 시 회색 처리 (같은 시간대 ±1h ActualRun 5건 미만 또는 가입 2주 이내)
+- [x] 4.1 일정 생성 시 점수 자동 산출 (`createEvent` → `computeFeasibility` → `persistFeasibilityScore`)
+- [x] 4.2 점수와 근거 캘린더에 표시 — chip 좌측 색 점 (green ≥70 / amber ≥50 / red < 50) + tooltip 근거
+- [x] 4.3 "이거 가능할까?" 대화 질의 — `compute_feasibility` 도구 + feasibility.md 프롬프트 결합
+- [x] 4.4 데이터 부족 시 회색 처리 — 표본 < 5건 또는 가입 < 14일이면 score=null, slate-300 점
 
 ## 5. 다음 주 예측 캘린더
 - [ ] 5.1 결정론: recurrence 있는 Event는 다음 주 인스턴스 자동 생성

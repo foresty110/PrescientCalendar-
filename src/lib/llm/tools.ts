@@ -108,8 +108,9 @@ export const updateEventTool = defineTool({
       defaultDurationMin: z.number().int().min(5).max(480).optional(),
     }),
   }),
-  handler: (_input, _ctx) =>
-    Promise.reject(new Error("update_event: not yet implemented (Step 5)")),
+  handler: async (input, ctx) => {
+    return events.updateEvent(ctx.userId, input.eventId, input.patch, ctx.now);
+  },
 });
 
 export const deleteEventTool = defineTool({
@@ -119,8 +120,9 @@ export const deleteEventTool = defineTool({
     eventId: z.string(),
     scope: z.enum(["all", "future_only"]),
   }),
-  handler: (_input, _ctx) =>
-    Promise.reject(new Error("delete_event: not yet implemented (Step 5)")),
+  handler: async (input, ctx) => {
+    return events.deleteEvent(ctx.userId, input.eventId, input.scope, ctx.now);
+  },
 });
 
 export const recordActualRunTool = defineTool({

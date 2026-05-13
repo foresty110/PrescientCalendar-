@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/client";
+import { assertOwnership } from "@/lib/db/auth";
 import { fromKstInput } from "@/lib/time";
 import { expandRecurrence, type Recurrence } from "@/lib/recurrence";
 import { computeFeasibility, persistFeasibilityScore } from "@/lib/db/feasibility";
@@ -147,6 +148,154 @@ export async function listScheduledRuns(
         }
       : {}),
   }));
+}
+
+export interface UpdateEventInput {
+  title?: string;
+  recurrence?: Recurrence | null;
+  defaultDurationMin?: number;
+}
+
+export interface UpdateEventResult {
+  eventId: string;
+  futureRunsDeleted: number;
+  futureRunsCreated: number;
+}
+
+/**
+ * Event 메타데이터 수정. recurrence가 바뀌면 미래 ScheduledRun (회고 없는 것)만
+ * 재생성. 회고 있는 미래 인스턴스는 보존 (사용자가 이미 의존). 과거 인스턴스
+ * 전부 보존.
+ *
+ * defaultDurationMin이 바뀌면 회고 없는 미래 ScheduledRun의 scheduledDurationMin도
+ * 동기화. 회고 있는 건 보존.
+ */
+export async function updateEvent(
+  userId: string,
+  eventId: string,
+  patch: UpdateEventInput,
+  now: Date,
+): Promise<UpdateEventResult> {
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { id: true, userId: true, defaultDurationMin: true, recurrence: true },
+  });
+  assertOwnership(event, userId);
+
+  let futureRunsDeleted = 0;
+  let futureRunsCreated = 0;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.event.update({
+      where: { id: eventId },
+      data: {
+        ...(patch.title !== undefined ? { title: patch.title } : {}),
+        ...(patch.defaultDurationMin !== undefined
+          ? { defaultDurationMin: patch.defaultDurationMin }
+          : {}),
+        ...(patch.recurrence !== undefined
+          ? {
+              recurrence: patch.recurrence
+                ? (patch.recurrence as unknown as Prisma.InputJsonValue)
+                : Prisma.JsonNull,
+            }
+          : {}),
+      },
+    });
+
+    if (patch.recurrence !== undefined) {
+      const deleted = await tx.scheduledRun.deleteMany({
+        where: {
+          eventId,
+          userId,
+          scheduledStartAt: { gt: now },
+          actualRun: { is: null },
+        },
+      });
+      futureRunsDeleted = deleted.count;
+
+      if (patch.recurrence) {
+        const anchor = await tx.scheduledRun.findFirst({
+          where: { eventId, userId },
+          orderBy: { scheduledStartAt: "asc" },
+          select: { scheduledStartAt: true, scheduledDurationMin: true },
+        });
+        const anchorAt = anchor?.scheduledStartAt ?? now;
+        const durationMin =
+          patch.defaultDurationMin ??
+          anchor?.scheduledDurationMin ??
+          event.defaultDurationMin;
+
+        const instances = expandRecurrence(anchorAt, patch.recurrence, {
+          now,
+          horizonWeeks: RECURRENCE_HORIZON_WEEKS,
+        }).filter((d) => d.getTime() > now.getTime());
+
+        await Promise.all(
+          instances.map((scheduledStartAt) =>
+            tx.scheduledRun.create({
+              data: { userId, eventId, scheduledStartAt, scheduledDurationMin: durationMin },
+            }),
+          ),
+        );
+        futureRunsCreated = instances.length;
+      }
+    } else if (patch.defaultDurationMin !== undefined) {
+      await tx.scheduledRun.updateMany({
+        where: {
+          eventId,
+          userId,
+          scheduledStartAt: { gt: now },
+          actualRun: { is: null },
+        },
+        data: { scheduledDurationMin: patch.defaultDurationMin },
+      });
+    }
+  });
+
+  return { eventId, futureRunsDeleted, futureRunsCreated };
+}
+
+export type DeleteScope = "all" | "future_only";
+
+export interface DeleteEventResult {
+  eventDeleted: boolean;
+  deletedScheduledRuns: number;
+}
+
+/**
+ * Event 또는 미래 ScheduledRun 삭제.
+ *
+ * - scope=all: Event row 삭제 → cascade로 모든 ScheduledRun·ActualRun 삭제
+ * - scope=future_only: 회고 없는 미래 ScheduledRun만 삭제. Event + 과거·회고됨은 보존
+ */
+export async function deleteEvent(
+  userId: string,
+  eventId: string,
+  scope: DeleteScope,
+  now: Date,
+): Promise<DeleteEventResult> {
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { id: true, userId: true },
+  });
+  assertOwnership(event, userId);
+
+  if (scope === "all") {
+    const count = await prisma.scheduledRun.count({ where: { eventId, userId } });
+    await prisma.event.delete({ where: { id: eventId } });
+    return { eventDeleted: true, deletedScheduledRuns: count };
+  }
+
+  const result = await prisma.scheduledRun.deleteMany({
+    where: {
+      eventId,
+      userId,
+      scheduledStartAt: { gt: now },
+      actualRun: { is: null },
+    },
+  });
+  return { eventDeleted: false, deletedScheduledRuns: result.count };
 }
 
 async function findConflicts(userId: string, startAt: Date, durationMin: number) {

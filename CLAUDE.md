@@ -87,6 +87,7 @@ tests/e2e/              # Playwright
 | LLM 도구 계약 | `docs/llm-tools.md` |
 | 알려진 리스크 | `docs/risks.md` |
 | Git 컨벤션 · 브랜치 · PR | `docs/git.md` |
+| 배포 (Vercel + Neon + Google OAuth prod) | `docs/deploy.md` |
 
 ## 권한 / 위험 작업
 

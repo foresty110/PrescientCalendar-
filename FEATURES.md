@@ -34,7 +34,7 @@
 ## 인프라·포트폴리오
 - [ ] I.1 GitHub Actions CI (typecheck/lint/test/build) 초록 배지
 - [ ] I.2 Vercel + Neon 배포 + Google OAuth prod 콜백
-- [ ] I.3 `/api/docs` Scalar 페이지 (공개 라우트)
+- [x] I.3 `/api/docs` Scalar 페이지 (공개 라우트) — Zod 스키마에서 OpenAPI 3.1 자동 생성, 미들웨어 공개 경로
 - [ ] I.4 Playwright e2e (로그인→일정 생성, 모바일 뷰포트)
 - [ ] I.5 모바일 반응형 (375px iPhone SE 사용 가능)
 - [ ] I.6 README 데모 GIF + 스크린샷 + 결정·트러블슈팅 링크

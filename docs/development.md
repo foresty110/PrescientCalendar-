@@ -88,11 +88,12 @@ src/
 - 에이전트 루프: tool_use → tool_result → messages.create 반복 (max 10턴 등 안전장치)
 - **userId는 LLM에 노출 안 함** — 서버가 핸들러 인자로 주입
 
-## 5. UI (Tailwind + 모바일 우선)
+## 5. UI (Tailwind, 데스크탑 우선)
 
-- Tailwind는 모바일 우선 — `sm:`, `md:`, `lg:` breakpoint로 점진 확장
-- 캘린더: `react-big-calendar` (월간 뷰 기본, 모바일에선 day/list 토글)
-- 채팅 사이드바: 데스크탑은 좌측 분할, 모바일은 토글 드로어
+- **MVP 타겟**: 데스크탑 웹 (1024px+). 모바일 반응형은 보류 (`docs/decisions/2026-05-13-defer-mobile-responsive.md`)
+- Tailwind 반응형 클래스(`sm:`/`md:`/`lg:`)는 dormant로 두되 새로 작성하는 컴포넌트는 데스크탑 레이아웃 우선으로 설계
+- 캘린더: `react-big-calendar` 월간 뷰
+- 채팅 사이드바: 데스크탑 좌측 분할 고정
 - 폼: HTML `<form>` + Server Action 우선, 복잡하면 react-hook-form
 - 다크모드: Tailwind `dark:` (system 설정 따름)
 - 접근성: 인터랙티브 요소는 `aria-label`, 키보드 탭 순서, 포커스 표시
@@ -121,7 +122,7 @@ src/
 ## 7. 테스트
 
 - **Vitest 유닛** — 비즈니스 로직 (시간대 변환, feasibility 계산, recurrence 펼치기 등). UI는 거의 안 함
-- **Playwright e2e** — `tests/e2e/main-flow.spec.ts` 한 줄기만 (로그인→일정 생성→캘린더). 모바일 뷰포트 포함
+- **Playwright e2e** — `tests/e2e/main-flow.spec.ts` 한 줄기만 (로그인→일정 생성→캘린더). 데스크탑 뷰포트 (모바일 보류)
 - **Sanity check** — `scripts/sanity.ts`로 LLM 동작 시나리오 3~5개 직접 호출. `pnpm sanity`. JSON 케이스·CI 통합 X
 - 테스트 DB: 별도 `DATABASE_URL` (CI 환경변수). 로컬은 도커 컴포즈 Postgres 그대로
 

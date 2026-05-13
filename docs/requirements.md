@@ -79,11 +79,12 @@
 ## MVP 범위 외
 
 - **다음 주 예측 캘린더** — `docs/decisions/2026-05-13-exclude-next-week-prediction.md` 참조. Prisma `Prediction` 모델·`prompts/next-week.md`는 schema dormant로 유지 (추후 부활 시 빠르게 재활성)
+- **모바일 반응형** — 웹(데스크탑) 단일 타겟으로 우선 출시. `docs/decisions/2026-05-13-defer-mobile-responsive.md` 참조. Tailwind 반응형 클래스(`sm:`/`md:`/`lg:`)는 그대로 두어 추후 부활 시 빠르게 시작 가능
 
 ## 비기능 요구사항
 
 - **응답 지연**: 채팅 첫 토큰 ≤ 2초 (Anthropic streaming + 프롬프트 캐싱)
 - **시간대**: DB는 UTC, 입출력은 KST (`date-fns-tz`)
 - **프라이버시**: 캘린더는 개인 정보 — 시크릿/PII는 로그·에러 응답에 노출 금지
-- **모바일**: 375px(iPhone SE)에서 사용 가능
+- **데스크탑 우선**: 1024px+ 화면에서 사용 가능. 모바일 반응형은 보류 (위 참조)
 - **데이터 격리**: 모든 도메인 쿼리에 userId 필터 + IDOR 방어

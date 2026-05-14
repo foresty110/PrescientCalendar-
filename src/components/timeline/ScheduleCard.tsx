@@ -10,6 +10,8 @@ const KST = "Asia/Seoul";
 export interface ScheduleCardItem {
   scheduledRunId: string;
   title: string;
+  /** Event 의 사전 메모 — 있으면 카드 본문에 한 줄 텍스트로 노출 (긴 경우 truncate, title 속성으로 전문) */
+  description: string | null;
   scheduledStartAt: string; // ISO
   scheduledDurationMin: number;
   status: TimelineStatus;
@@ -89,6 +91,14 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
         >
           {time} – {endTime}
         </div>
+        {item.description && (
+          <div
+            className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-400"
+            title={item.description}
+          >
+            {item.description}
+          </div>
+        )}
         {highlighted && (
           <div className="mt-1 text-[10px] font-medium text-[color:var(--color-brand-primary)]">
             💬 채팅으로 분석 보기 →

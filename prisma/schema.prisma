@@ -74,6 +74,10 @@ model Event {
   id                  String    @id @default(cuid())
   userId              String
   title               String
+  // 일정의 사전 메모 — 모든 ScheduledRun 인스턴스가 공유.
+  // 채팅에서 "내용/메모도 같이 기록해 줘" 같은 요청으로 채워짐.
+  // 회고 메모(ActualRun 의 자유 텍스트)는 별 필드(추후 작업)로 분리.
+  description         String?
   recurrence          Json?     // { freq, byDay?, until? }
   defaultDurationMin  Int
   createdAt           DateTime  @default(now())

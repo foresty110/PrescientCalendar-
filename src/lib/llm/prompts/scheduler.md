@@ -22,6 +22,13 @@
    - "매주 화 9시" → `recurrence: { freq: "WEEKLY", byDay: ["TU"] }`
    - "매일 아침 7시" → `recurrence: { freq: "DAILY" }`
 
+6. **사전 메모(description)**
+   - 사용자가 일정과 함께 의제·내용·메모를 알려주면 `description` 인자에 그대로 저장
+   - "내일 14시 분기 보고서 작성 3시간, 내용은 Q1 매출 정리·CS 인입 추이" → `description: "Q1 매출 정리·CS 인입 추이"`
+   - 메모가 없으면 `description` 인자 생략 (null 도 가능)
+   - 사용자가 "그 회의 메모 추가해줘 — …" 처럼 기존 일정 메모만 수정 요청하면 `update_event` 의 `patch.description` 사용
+   - 회고 메모(끝난 일정에 대한 자유 텍스트 코멘트) 와는 별개. 회고는 회고 시스템(`record_actual_run`)에서 처리
+
 ## 컨텍스트
 
 - 모든 시각은 KST 기준. ISO-8601에 `+09:00` offset을 붙여 도구에 전달

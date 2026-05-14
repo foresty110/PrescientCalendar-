@@ -13,6 +13,7 @@ const KST = "Asia/Seoul";
 interface ScheduledRunItem {
   scheduledRunId: string;
   title: string;
+  description: string | null;
   scheduledStartAt: string;
   scheduledDurationMin: number;
   feasibilityScore: number | null;
@@ -98,6 +99,7 @@ export function TodayTimeline({
   const cards: ScheduleCardItem[] = items.map((it) => ({
     scheduledRunId: it.scheduledRunId,
     title: it.title,
+    description: it.description,
     scheduledStartAt: it.scheduledStartAt,
     scheduledDurationMin: it.scheduledDurationMin,
     feasibilityScore: it.feasibilityScore,

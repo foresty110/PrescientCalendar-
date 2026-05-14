@@ -35,3 +35,7 @@ prisma/migrations/dev-*/
 # OpenAPI 생성물은 커밋 (포트폴리오 가시성 위해)
 # openapi.json — 커밋 OK
 .vercel
+
+# Vercel env 셋업 스크립트 — 실제 토큰·시크릿 채워진 파일은 커밋 금지 (.example 만 커밋)
+scripts/setup-vercel-env-*.sh
+!scripts/setup-vercel-env-*.sh.example

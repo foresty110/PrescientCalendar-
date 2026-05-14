@@ -53,6 +53,21 @@ prod 콜백 URL 은 Vercel 배포 이후에 등록한다 (5번 단계). 여기�
 
    > **`AUTH_URL` 대신 `AUTH_TRUST_HOST=true`** — Vercel 의 preview 배포는 매번 다른 URL(`<branch>-<hash>.vercel.app`)이라 고정값이 안 맞음. trust host 모드로 요청 호스트를 자동 인식.
 
+   **Dashboard UI 대신 스크립트로 한 번에 등록하고 싶을 때** — 저장소에 둔 `.example` 두 개를 활용:
+
+   ```bash
+   # Production · Development (CLI 사용)
+   cp scripts/setup-vercel-env-production.sh.example scripts/setup-vercel-env-production.sh
+   # 파일 안의 REPLACE_WITH_* 값을 채운 뒤
+   bash scripts/setup-vercel-env-production.sh
+
+   # Preview (CLI 의 silent skip 버그 우회 — Vercel HTTP API 직접 호출)
+   cp scripts/setup-vercel-env-preview.sh.example scripts/setup-vercel-env-preview.sh
+   bash scripts/setup-vercel-env-preview.sh
+   ```
+
+   채워 둔 실파일(`*.sh`) 은 `.gitignore` 로 커밋이 막혀있다 (시크릿 보호). 왜 Preview 만 별도 스크립트인지는 `docs/troubleshooting/2026-05-14-vercel-first-deploy-cli-quirks.md`.
+
 5. **Deploy** 클릭. 빌드 로그에서 `prisma migrate deploy` 가 마이그레이션을 Neon DB 에 적용하는지 확인.
 
 ## 4. prod URL 확정

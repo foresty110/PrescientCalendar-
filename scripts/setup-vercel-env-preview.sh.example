@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# Vercel Preview 환경에 env 6개 등록 (Vercel HTTP API 직접 호출)
+#
+# 왜 CLI 가 아니라 HTTP API 인가:
+#   Vercel CLI 의 `vercel env add <키> preview` 가 값을 받고도 실제 등록은
+#   하지 않은 채 에러도 경고도 띄우지 않고 종료하는 silent skip 버그가 있다.
+#   자세히: docs/troubleshooting/2026-05-14-vercel-first-deploy-cli-quirks.md
+#   (Production·Development 는 별도 스크립트: setup-vercel-env-production.sh)
+#
+# 사용법:
+#   1. cp scripts/setup-vercel-env-preview.sh.example scripts/setup-vercel-env-preview.sh
+#   2. 아래 REPLACE_WITH_* 값을 채운다 (실제 파일은 .gitignore 로 커밋 금지)
+#   3. bash scripts/setup-vercel-env-preview.sh
+#
+# 사전 준비:
+#   - Vercel 토큰 (Vercel Dashboard → Settings → Tokens)
+#   - 프로젝트 슬러그 (Vercel Dashboard URL 의 마지막 segment)
+#   - curl, python3 (JSON 파싱용)
+
+set -euo pipefail
+
+VERCEL_TOKEN="REPLACE_WITH_YOUR_VERCEL_TOKEN"
+PROJECT="REPLACE_WITH_PROJECT_SLUG"
+
+DATABASE_URL="REPLACE_WITH_NEON_POSTGRES_CONNECTION_STRING"
+ANTHROPIC_API_KEY="REPLACE_WITH_ANTHROPIC_API_KEY"
+AUTH_SECRET="$(openssl rand -base64 32)"   # Preview 는 prod 와 별도 시크릿 권장 (세션 격리)
+AUTH_TRUST_HOST="true"
+AUTH_GOOGLE_ID="REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"
+AUTH_GOOGLE_SECRET="REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET"
+
+add_preview() {
+  local KEY="$1"
+  local VALUE="$2"
+  local JSON
+  JSON=$(printf '%s' "$VALUE" | python3 -c 'import json,sys; print(json.dumps({"key":"'"$KEY"'","value":sys.stdin.read(),"type":"encrypted","target":["preview"]}))')
+  RESP=$(curl -s -X POST "https://api.vercel.com/v10/projects/$PROJECT/env" \
+    -H "Authorization: Bearer $VERCEL_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$JSON")
+  STATUS=$(echo "$RESP" | python3 -c 'import json,sys; d=json.load(sys.stdin); print("OK" if "created" in d else d.get("error",{}).get("message","unknown error: "+json.dumps(d)))')
+  echo "$KEY: $STATUS"
+}
+
+echo "=== Registering 6 keys to: preview (via HTTP API) ==="
+add_preview DATABASE_URL       "$DATABASE_URL"
+add_preview ANTHROPIC_API_KEY  "$ANTHROPIC_API_KEY"
+add_preview AUTH_SECRET        "$AUTH_SECRET"
+add_preview AUTH_TRUST_HOST    "$AUTH_TRUST_HOST"
+add_preview AUTH_GOOGLE_ID     "$AUTH_GOOGLE_ID"
+add_preview AUTH_GOOGLE_SECRET "$AUTH_GOOGLE_SECRET"
+
+echo
+echo "=== 등록 후 Preview 환경 변수 목록 (6 줄 예상) ==="
+vercel env ls preview --token "$VERCEL_TOKEN" 2>&1 || echo "(vercel CLI 없으면 Dashboard 에서 확인)"

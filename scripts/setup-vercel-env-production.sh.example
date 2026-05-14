@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# Vercel Production·Development 환경에 env 6개 등록 (CLI 사용)
+#
+# 사용법:
+#   1. cp scripts/setup-vercel-env-production.sh.example scripts/setup-vercel-env-production.sh
+#   2. 아래 REPLACE_WITH_* 값을 채운다 (실제 파일은 .gitignore 로 커밋 금지)
+#   3. bash scripts/setup-vercel-env-production.sh
+#
+# 사전 준비:
+#   - Vercel CLI 설치 (`npm i -g vercel`)
+#   - Vercel 토큰 발급 (Vercel Dashboard → Settings → Tokens)
+#   - 로컬에서 한 번 `vercel link` 로 프로젝트 연결
+#
+# 동작:
+#   Production 과 Development 두 타겟에 같은 6개 키를 등록.
+#   Preview 타겟은 CLI 에 silent skip 버그가 있어 별도 스크립트 사용 — setup-vercel-env-preview.sh
+#   자세히: docs/troubleshooting/2026-05-14-vercel-first-deploy-cli-quirks.md
+
+set -euo pipefail
+
+export VERCEL_TOKEN="REPLACE_WITH_YOUR_VERCEL_TOKEN"
+
+DATABASE_URL="REPLACE_WITH_NEON_POSTGRES_CONNECTION_STRING"
+ANTHROPIC_API_KEY="REPLACE_WITH_ANTHROPIC_API_KEY"
+AUTH_SECRET="$(openssl rand -base64 32)"
+AUTH_TRUST_HOST="true"
+AUTH_GOOGLE_ID="REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID"
+AUTH_GOOGLE_SECRET="REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET"
+
+add_env() {
+  local KEY="$1"
+  local VALUE="$2"
+  local TARGET="$3"   # production 또는 development
+  printf '%s' "$VALUE" | vercel env add "$KEY" "$TARGET" --token "$VERCEL_TOKEN"
+}
+
+for TARGET in production development; do
+  echo "=== Registering 6 keys to: $TARGET ==="
+  add_env DATABASE_URL       "$DATABASE_URL"        "$TARGET"
+  add_env ANTHROPIC_API_KEY  "$ANTHROPIC_API_KEY"   "$TARGET"
+  add_env AUTH_SECRET        "$AUTH_SECRET"         "$TARGET"
+  add_env AUTH_TRUST_HOST    "$AUTH_TRUST_HOST"     "$TARGET"
+  add_env AUTH_GOOGLE_ID     "$AUTH_GOOGLE_ID"      "$TARGET"
+  add_env AUTH_GOOGLE_SECRET "$AUTH_GOOGLE_SECRET"  "$TARGET"
+done
+
+echo
+echo "=== 등록 후 환경 변수 목록 (Production·Development 12 줄 예상) ==="
+vercel env ls --token "$VERCEL_TOKEN"

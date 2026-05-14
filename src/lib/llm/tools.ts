@@ -68,9 +68,16 @@ export const createEventTool = defineTool({
   name: "create_event",
   description:
     "사용자가 새 일정을 만들 때 호출. 과거 시각은 거부 — assistant는 사용자에게 재질문. " +
-    "같은 시간에 겹치는 일정이 있으면 conflictWarning을 반환하므로 사용자 확인 후 진행.",
+    "같은 시간에 겹치는 일정이 있으면 conflictWarning을 반환하므로 사용자 확인 후 진행. " +
+    "사용자가 일정의 내용·메모·의제 등을 함께 알려주면 description 인자에 그대로 담아 저장.",
   inputSchema: z.object({
     title: z.string().min(1).max(100),
+    description: z
+      .string()
+      .max(2000)
+      .nullable()
+      .optional()
+      .describe("일정의 사전 메모 — 모든 회차 공유. 사용자가 명시적으로 줬을 때만 채움"),
     startAt: isoDateTime.describe("ISO-8601, KST offset 권장 (예: 2026-05-13T15:00:00+09:00)"),
     durationMin: z.number().int().min(5).max(480),
     recurrence: recurrenceSchema,
@@ -104,6 +111,12 @@ export const updateEventTool = defineTool({
     eventId: z.string(),
     patch: z.object({
       title: z.string().min(1).max(100).optional(),
+      description: z
+        .string()
+        .max(2000)
+        .nullable()
+        .optional()
+        .describe("사전 메모 갱신. null 전달 시 메모 제거. 미전달이면 그대로 유지"),
       recurrence: recurrenceSchema,
       defaultDurationMin: z.number().int().min(5).max(480).optional(),
     }),

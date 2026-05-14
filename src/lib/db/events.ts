@@ -13,6 +13,8 @@ export interface CreateEventInput {
   startAt: string;
   durationMin: number;
   recurrence?: Recurrence | null;
+  /** 사전 메모 — 일정 카드 시간 범위 옆에 표시. 모든 ScheduledRun 인스턴스 공유. */
+  description?: string | null;
 }
 
 export interface CreateEventResult {
@@ -57,6 +59,7 @@ export async function createEvent(
       data: {
         userId,
         title: input.title,
+        description: input.description ?? null,
         defaultDurationMin: input.durationMin,
         recurrence: input.recurrence
           ? (input.recurrence as unknown as Prisma.InputJsonValue)
@@ -101,6 +104,7 @@ export interface ScheduledRunListItem {
   scheduledRunId: string;
   eventId: string;
   title: string;
+  description: string | null;
   scheduledStartAt: Date;
   scheduledDurationMin: number;
   feasibilityScore: number | null;
@@ -125,7 +129,7 @@ export async function listScheduledRuns(
       scheduledStartAt: { gte: params.from, lte: params.to },
     },
     include: {
-      event: { select: { id: true, title: true } },
+      event: { select: { id: true, title: true, description: true } },
       actualRun: params.withActualRun ? true : false,
     },
     orderBy: { scheduledStartAt: "asc" },
@@ -135,6 +139,7 @@ export async function listScheduledRuns(
     scheduledRunId: r.id,
     eventId: r.event.id,
     title: r.event.title,
+    description: r.event.description,
     scheduledStartAt: r.scheduledStartAt,
     scheduledDurationMin: r.scheduledDurationMin,
     feasibilityScore: r.feasibilityScore,
@@ -152,6 +157,7 @@ export async function listScheduledRuns(
 
 export interface UpdateEventInput {
   title?: string;
+  description?: string | null;
   recurrence?: Recurrence | null;
   defaultDurationMin?: number;
 }
@@ -190,6 +196,7 @@ export async function updateEvent(
       where: { id: eventId },
       data: {
         ...(patch.title !== undefined ? { title: patch.title } : {}),
+        ...(patch.description !== undefined ? { description: patch.description } : {}),
         ...(patch.defaultDurationMin !== undefined
           ? { defaultDurationMin: patch.defaultDurationMin }
           : {}),

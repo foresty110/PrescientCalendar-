@@ -10,6 +10,8 @@ const KST = "Asia/Seoul";
 export interface ScheduleCardItem {
   scheduledRunId: string;
   title: string;
+  /** Event 의 사전 메모 — 있으면 카드에 작은 아이콘 + tooltip 으로 노출 */
+  description: string | null;
   scheduledStartAt: string; // ISO
   scheduledDurationMin: number;
   status: TimelineStatus;
@@ -71,6 +73,15 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
             {item.title}
           </span>
           <div className="flex shrink-0 items-center gap-2">
+            {item.description && (
+              <span
+                aria-label="메모 있음"
+                title={item.description}
+                className="text-[11px] text-slate-400 dark:text-slate-500"
+              >
+                📝
+              </span>
+            )}
             {showProbability && <InlineProbability score={item.feasibilityScore} />}
             {BADGE[item.status] && (
               <span className={`rounded px-1.5 py-0.5 text-[10px] ${BADGE[item.status]?.className}`}>

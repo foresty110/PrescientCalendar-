@@ -17,6 +17,7 @@
 - [x] 2.4 일정 삭제 — `delete_event` 도구 실구현. scope=`all` 전체 cascade, `future_only`는 회고 없는 미래만
 - [ ] 2.5 모호한 입력 시 재질문 ("나중에 운동" → 시각 확정 질문) — 프롬프트로 유도, 실측 필요
 - [ ] 2.6 시간 충돌 경고 — `conflictWarning` 반환은 구현, LLM 흐름 검증 필요
+- [x] 2.7 일정 사전 메모 (description) — Event 모델에 description 컬럼, `create_event`/`update_event` 도구 입력에 description 인자, 카드 시간 범위 옆에 📝 아이콘 + 호버 tooltip (회고 메모는 별 작업으로 분리)
 
 ## 3. 회고 (대화형 우선)
 - [x] 3.1 채팅으로 단건 회고 기록 — `record_actual_run` 도구 + IDOR 방어 UPSERT

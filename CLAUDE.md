@@ -31,6 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - **PR 생성 전 자가 검증 필수**: `pnpm typecheck && pnpm lint && pnpm test && pnpm build` 모두 통과 후에만 PR 생성
    - **PR 크기**: 추가+삭제 300줄 또는 파일 10개 초과면 분할 권유
    - **PR self-review**: 생성 후 GitHub UI에서 diff 한 번 읽기 (console.log·시크릿·디버그 잔재 점검). 발견 시 같은 브랜치에 후속 커밋
+   - **fix-forward 원칙**: 한 PR 은 하나의 주제가 안정될 때까지 살아있는 단위. CI 실패·Vercel preview 빌드 실패·리뷰 코멘트는 **새 PR 을 만들지 말고 같은 브랜치에 후속 커밋**으로 흡수해서 push. 새 PR 은 (1) 이미 머지된 PR 의 후속 또는 (2) 다른 주제의 변경일 때만. 자세히는 `docs/git.md §3` "fix-forward 원칙"
    - **시크릿 사고**: `.env` 등 실수 푸시 시 **즉시 키 회전·폐기**가 history 청소보다 우선
    - 푸시: 기능 브랜치는 자유롭게 push, **main으로의 직접 push는 사용자 명시 승인 후에만**
    - PR은 `gh pr create`로 생성, **머지는 사용자가** GitHub UI에서 (또는 명시 승인 시 `gh pr merge --squash --delete-branch`)

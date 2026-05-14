@@ -148,9 +148,39 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 2. **작업 + 커밋**: Conventional Commits 형식. 작은 단위로 자주 커밋 OK (squash merge라서 PR 단위로 정리됨)
 3. **푸시**: `git push -u origin <branch>` — 기능 브랜치는 자유롭게 푸시
 4. **PR 생성**: `gh pr create` (제목·본문 형식은 아래)
-5. **CI 통과 확인**: GitHub Actions 초록색
-6. **머지**: **사용자가** GitHub UI에서 "Squash and merge" 클릭, 또는 명시 승인 시 Claude가 `gh pr merge --squash --delete-branch`
-7. **로컬 정리**: `git checkout main && git pull && git branch -d <branch>`
+5. **CI / Vercel preview / 리뷰 결과 확인**: 초록 + 리뷰 통과까지 대기
+6. **문제 발견 시 — 같은 PR 에 fix-forward (아래 박스 참조)**: CI 빨강, preview 빌드 실패, 리뷰 코멘트, 자가 점검 누락 등은 **새 PR 을 만들지 않고 같은 브랜치에 후속 커밋** → push 만으로 PR 이 자동 갱신
+7. **머지**: 위 5–6 이 안정된 후에만 — **사용자가** GitHub UI 에서 "Squash and merge" 클릭, 또는 명시 승인 시 Claude 가 `gh pr merge --squash --delete-branch`
+8. **로컬 정리**: `git checkout main && git pull && git branch -d <branch>`
+
+### fix-forward 원칙 (PR 단위 정책)
+
+> **한 PR 은 하나의 "주제" 가 안정될 때까지 살아있는 단위다.** 빌드 실패·리뷰 피드백·CI 깨짐 같은 문제는 새 PR 을 만들지 않고 **같은 브랜치의 후속 커밋으로 흡수**한다.
+
+왜 이 원칙이 필요한가:
+
+- 한 주제의 변경이 PR 두세 개로 쪼개지면 (PR #N: 시도, PR #N+1: fix, PR #N+2: 후속 fix…) 리뷰어와 미래의 자신이 "이 한 가지 결정이 왜 이렇게 만들어졌는지" 따라가기 위해 여러 PR 을 오가야 한다
+- squash merge 후 main 의 커밋 메시지만 봐도 한 주제의 결말이 한 줄로 잡혀야 함 — 분할 PR 은 본문이 분산되어 그 효과를 잃는다
+- 직전 작업에서 실제로 이 패턴이 깨졌음: PR #13 (Vercel 배포 준비) → 빌드 실패 → PR #14 (vercel.json) 분리. 같은 PR 안에서 후속 커밋으로 풀었으면 한 주제의 시도·실패·해결이 한 자리에 남았을 것
+
+어떤 경우에 같은 PR 안에서 fix-forward 하는가:
+
+- CI 실패 (typecheck / lint / test / build)
+- Vercel preview 빌드 실패
+- 리뷰어 코멘트 (수정 가능한 범위)
+- 자가 점검에서 발견한 잔재 (console.log, 사용 안 하는 import 등)
+- PR 본문에 적은 "테스트 plan" 항목 보강
+
+어떤 경우에 새 PR 인가:
+
+- **이미 머지된 PR** 에서 발견된 문제 — 새 PR 로 fix-forward (revert 가 아닌 추가 변경으로 풀이)
+- **다른 주제**의 변경 — 한 PR 안에 섞으면 squash 메시지가 모호해진다 ("docs: README 작성 + 트러블슈팅 로그" 같은 식)
+- **PR 크기 가이드(§11) 한도 초과** 가 예상될 때
+
+머지 타이밍:
+
+- **CI · Vercel preview · 리뷰 코멘트가 모두 안정된 후에만** 머지. 빨리 머지하고 후속 PR 로 따라잡는 패턴은 본 정책에 어긋남
+- 한 PR 의 빌드 안정화에 시간이 걸려도 그 PR 을 살려두고 다음 주제는 별 브랜치로 시작 — 동시에 여러 PR 이 줄 서 있는 상태는 정상
 
 ### PR 제목·본문
 

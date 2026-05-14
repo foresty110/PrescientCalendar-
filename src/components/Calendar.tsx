@@ -81,7 +81,7 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
   }
 
   return (
-    <div className="flex h-full min-h-[400px] flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
       <header className="flex items-center justify-between text-sm">
         <span className="font-semibold text-slate-600 dark:text-slate-300">
           {formatInTimeZone(now, KST, "yyyy년 M월")}
@@ -106,14 +106,14 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
             <div
               key={key}
               className={
-                "min-h-[80px] bg-white px-2 py-1 dark:bg-slate-950 " +
+                "min-h-[56px] bg-white px-1.5 py-1 dark:bg-slate-950 " +
                 (d.inMonth ? "" : "text-slate-300 dark:text-slate-700") +
                 (d.isToday ? " ring-2 ring-inset ring-slate-900 dark:ring-slate-100" : "")
               }
             >
               <div className="mb-1 text-right">{formatInTimeZone(d.date, KST, "d")}</div>
               <ul className="space-y-0.5">
-                {dayItems.slice(0, 3).map((it) => {
+                {dayItems.slice(0, 2).map((it) => {
                   const isPast = new Date(it.scheduledStartAt).getTime() <= now.getTime();
                   const hasRetro = !!it.actualRun;
                   return (
@@ -149,8 +149,8 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
                     </li>
                   );
                 })}
-                {dayItems.length > 3 && (
-                  <li className="text-[10px] text-slate-400">+{dayItems.length - 3}</li>
+                {dayItems.length > 2 && (
+                  <li className="text-[10px] text-slate-400">+{dayItems.length - 2}</li>
                 )}
               </ul>
             </div>

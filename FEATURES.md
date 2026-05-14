@@ -31,6 +31,11 @@
 - [x] 4.3 "이거 가능할까?" 대화 질의 — `compute_feasibility` 도구 + feasibility.md 프롬프트 결합
 - [x] 4.4 데이터 부족 시 회색 처리 — 표본 < 5건 또는 가입 < 14일이면 score=null, slate-300 점
 
+## 5. 오늘의 일정 타임라인 — 카드 클릭으로 채팅 시작
+- [x] 5.1 (Phase 1 MVP) 월 캘린더 아래 오늘의 일정 타임라인 — 시간순 카드, 상태별 노드/배지(완료·스킵·회고 필요·진행중·예정), "지금" 마커, 1분마다 자동 갱신. 카드 클릭 → 우측 채팅 입력란에 "오늘 HH:mm [제목] 일정에 대해 이야기하고 싶어" 자동 채움 + 포커스 (자동 전송 X, 사용자가 직접 보내기)
+- [ ] 5.2 (Phase 2) 강조된 다음 일정 카드, 미니 확률 진행 바, 채팅 헤더 컨텍스트 칩 + × 해제
+- [ ] 5.3 (Phase 3) 완료 일정 클릭 시 "어땠어?" 회고 흐름 분기, 종일 일정 분리 영역, 0건 빈 상태 UX 풀, 풀 키보드 접근성, LLM 응답의 확률/신뢰도/요인 카드 UI
+
 ## 인프라·포트폴리오
 - [x] I.1 GitHub Actions CI (typecheck/lint/test/build) 초록 배지 — README 상단에 `actions/workflows/ci.yml/badge.svg` 추가
 - [x] I.2 Vercel + Neon 배포 + Google OAuth prod 콜백 — prod URL `https://prescient-calendar.vercel.app` 동작, 6개 env × Production·Preview·Development 18개 등록, Google OAuth callback 등록 완료

@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -12,11 +18,37 @@ interface ChatProps {
   onCompletion?: (toolCalls: { name: string }[]) => void;
 }
 
-export function Chat({ onCompletion }: ChatProps) {
+/** 외부에서 채팅 입력란을 제어할 수 있는 명령형 핸들.
+ *  요구사항 §4.1 의 "일정 카드 클릭 → 채팅 입력란에 사용자 메시지 자동 채움 + 포커스".
+ *  자동 전송은 하지 않음 (사용자가 Enter 직접). */
+export interface ChatHandle {
+  prefill: (text: string) => void;
+}
+
+export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
+  { onCompletion },
+  ref,
+) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      prefill: (text: string) => {
+        setInput(text);
+        // 다음 paint 이후 포커스 — 입력값 갱신이 DOM 에 반영된 뒤
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+          inputRef.current?.setSelectionRange(text.length, text.length);
+        });
+      },
+    }),
+    [],
+  );
 
   function send(form: FormData) {
     const raw = form.get("text");
@@ -88,6 +120,7 @@ export function Chat({ onCompletion }: ChatProps) {
 
       <form action={send} className="flex gap-2">
         <input
+          ref={inputRef}
           type="text"
           name="text"
           value={input}
@@ -107,4 +140,4 @@ export function Chat({ onCompletion }: ChatProps) {
       </form>
     </div>
   );
-}
+});

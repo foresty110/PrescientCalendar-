@@ -17,12 +17,19 @@ export function AppShell() {
 
   function handleTimelineCardSelect(item: ScheduleCardItem) {
     const time = formatInTimeZone(new Date(item.scheduledStartAt), KST, "HH:mm");
-    chatRef.current?.prefill(`오늘 ${time} ${item.title} 일정에 대해 이야기하고 싶어`);
+    chatRef.current?.prefill(
+      `오늘 ${time} ${item.title} 일정에 대해 이야기하고 싶어`,
+      "일정 카드에서 시작됨",
+    );
     setChatContext({
       scheduledRunId: item.scheduledRunId,
       title: item.title,
       time,
     });
+  }
+
+  function handleTimelineAddClick() {
+    chatRef.current?.focusInput();
   }
 
   return (
@@ -32,6 +39,7 @@ export function AppShell() {
         <TodayTimeline
           refreshKey={refreshKey}
           onSelect={handleTimelineCardSelect}
+          onAddClick={handleTimelineAddClick}
           selectedScheduledRunId={chatContext?.scheduledRunId ?? null}
         />
       </div>

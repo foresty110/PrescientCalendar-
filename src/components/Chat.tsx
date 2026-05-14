@@ -11,6 +11,9 @@ import {
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  /** 사용자 메시지가 어떤 경로로 생성됐는지 표시할 작은 라벨 (예: "일정 카드에서 시작됨").
+   *  요구사항 §4.1 의 "↗ 일정 카드에서 시작됨" 메타 표기. */
+  meta?: string;
 }
 
 /** 채팅 헤더 컨텍스트 칩에 표시되는 일정 컨텍스트.
@@ -31,10 +34,14 @@ interface ChatProps {
   onContextClear?: () => void;
 }
 
-/** 외부에서 채팅 입력란을 자동 채워주는 명령형 핸들 (요구사항 §4.1).
+/** 외부에서 채팅 입력란을 제어하는 명령형 핸들.
+ *  - prefill(text, meta?): 입력란 자동 채움 + 포커스. meta 가 주어지면 다음 send 시
+ *    그 메시지에 작은 메타 라벨이 붙는다 (예: "일정 카드에서 시작됨")
+ *  - focusInput(): 입력란만 포커스 (메시지 채우지 않음 — "+ 추가" 버튼 등에서 사용)
  *  컨텍스트 상태는 더 이상 핸들에 두지 않고 props 로 controlled. */
 export interface ChatHandle {
-  prefill: (text: string) => void;
+  prefill: (text: string, meta?: string) => void;
+  focusInput: () => void;
 }
 
 export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
@@ -43,6 +50,7 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const [pendingMeta, setPendingMeta] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,13 +58,17 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
   useImperativeHandle(
     ref,
     () => ({
-      prefill: (text: string) => {
+      prefill: (text: string, meta?: string) => {
         setInput(text);
+        setPendingMeta(meta ?? null);
         // 다음 paint 이후 포커스 — 입력값 갱신이 DOM 에 반영된 뒤
         requestAnimationFrame(() => {
           inputRef.current?.focus();
           inputRef.current?.setSelectionRange(text.length, text.length);
         });
+      },
+      focusInput: () => {
+        requestAnimationFrame(() => inputRef.current?.focus());
       },
     }),
     [],
@@ -67,9 +79,15 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
     const text = typeof raw === "string" ? raw.trim() : "";
     if (!text || isPending) return;
     setError(null);
-    const next: ChatMessage[] = [...messages, { role: "user", content: text }];
+    const next: ChatMessage[] = [
+      ...messages,
+      pendingMeta
+        ? { role: "user", content: text, meta: pendingMeta }
+        : { role: "user", content: text },
+    ];
     setMessages(next);
     setInput("");
+    setPendingMeta(null);
 
     startTransition(async () => {
       try {
@@ -121,18 +139,28 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
             예: <code>내일 오후 3시에 1시간 운동</code> · <code>다음 주 화요일 9시 회의</code>
           </li>
         )}
-        {messages.map((m, i) => (
-          <li
-            key={i}
-            className={
-              m.role === "user"
-                ? "ml-8 rounded-md bg-slate-900 px-3 py-2 text-white dark:bg-slate-100 dark:text-slate-900"
-                : "mr-8 rounded-md bg-slate-100 px-3 py-2 dark:bg-slate-800"
-            }
-          >
-            {m.content || (m.role === "assistant" && isPending ? "…" : null)}
-          </li>
-        ))}
+        {messages.map((m, i) =>
+          m.role === "user" ? (
+            <li key={i} className="ml-8 flex flex-col items-end gap-1">
+              {m.meta && (
+                <span className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500">
+                  <span aria-hidden>↗</span>
+                  <span>{m.meta}</span>
+                </span>
+              )}
+              <span className="rounded-md bg-slate-900 px-3 py-2 text-white dark:bg-slate-100 dark:text-slate-900">
+                {m.content}
+              </span>
+            </li>
+          ) : (
+            <li
+              key={i}
+              className="mr-8 rounded-md bg-slate-100 px-3 py-2 dark:bg-slate-800"
+            >
+              {m.content || (isPending ? "…" : null)}
+            </li>
+          ),
+        )}
         {isPending && (
           <li className="mr-8 rounded-md bg-slate-100 px-3 py-2 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
             생각 중…

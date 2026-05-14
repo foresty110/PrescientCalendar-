@@ -37,4 +37,4 @@
 - [x] I.3 `/api/docs` Scalar 페이지 (공개 라우트) — Zod 스키마에서 OpenAPI 3.1 자동 생성, 미들웨어 공개 경로
 - [x] I.4 Playwright e2e (데스크탑 뷰포트) — 인증 주입 방식으로 3개 시나리오 통과 (공개 랜딩 / 보호 라우트 리다이렉트 / 인증된 대시보드 렌더). LLM 비용 회피 위해 채팅·일정 생성은 별도 PR로 mock 도입 시 확장 예정. CI 통합은 별도 PR
 - [ ] I.6 README 데모 GIF + 스크린샷 + 결정·트러블슈팅 링크
-- [ ] I.7 `docs/decisions/` 3개 이상, `docs/troubleshooting/` 2개 이상
+- [x] I.7 `docs/decisions/` 3개 이상, `docs/troubleshooting/` 2개 이상 — decisions 3개(다음 주 예측 제외·모바일 반응형 보류·pnpm 빌드 스크립트 차단), troubleshooting 4개

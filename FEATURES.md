@@ -32,7 +32,7 @@
 - [x] 4.4 데이터 부족 시 회색 처리 — 표본 < 5건 또는 가입 < 14일이면 score=null, slate-300 점
 
 ## 인프라·포트폴리오
-- [ ] I.1 GitHub Actions CI (typecheck/lint/test/build) 초록 배지
+- [x] I.1 GitHub Actions CI (typecheck/lint/test/build) 초록 배지 — README 상단에 `actions/workflows/ci.yml/badge.svg` 추가
 - [x] I.2 Vercel + Neon 배포 + Google OAuth prod 콜백 — prod URL `https://prescient-calendar.vercel.app` 동작, 6개 env × Production·Preview·Development 18개 등록, Google OAuth callback 등록 완료
 - [x] I.3 `/api/docs` Scalar 페이지 (공개 라우트) — Zod 스키마에서 OpenAPI 3.1 자동 생성, 미들웨어 공개 경로
 - [x] I.4 Playwright e2e (데스크탑 뷰포트) — 인증 주입 방식으로 3개 시나리오 통과 (공개 랜딩 / 보호 라우트 리다이렉트 / 인증된 대시보드 렌더). LLM 비용 회피 위해 채팅·일정 생성은 별도 PR로 mock 도입 시 확장 예정. CI 통합은 별도 PR

@@ -20,10 +20,12 @@ interface ScheduleCardProps {
   item: ScheduleCardItem;
   /** 미래 일정 중 가장 가까운 한 건만 true — 보라 배경·보더·마이크로카피로 시선 유도 */
   highlighted?: boolean;
+  /** 현재 채팅 컨텍스트로 활성된 카드 — 외곽 ring + 좌측 violet 줄로 "선택됨" 표시 */
+  selected?: boolean;
   onSelect: (item: ScheduleCardItem) => void;
 }
 
-export function ScheduleCard({ item, highlighted, onSelect }: ScheduleCardProps) {
+export function ScheduleCard({ item, highlighted, selected, onSelect }: ScheduleCardProps) {
   const start = new Date(item.scheduledStartAt);
   const time = formatInTimeZone(start, KST, "HH:mm");
   const ariaStatus = STATUS_KO[item.status];
@@ -47,12 +49,16 @@ export function ScheduleCard({ item, highlighted, onSelect }: ScheduleCardProps)
       <button
         type="button"
         onClick={() => onSelect(item)}
+        aria-pressed={selected}
         aria-label={`${time} ${item.title} (${ariaStatus}) 일정에 대해 채팅 시작`}
         className={
-          "group w-full rounded-md text-left text-[13px] transition-colors " +
+          "group relative w-full rounded-md text-left text-[13px] transition-all " +
           (highlighted
             ? "border border-violet-300 bg-violet-50 px-2 py-2 dark:border-violet-800 dark:bg-violet-950/40"
-            : "px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-900")
+            : "px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-900") +
+          (selected
+            ? " ring-2 ring-violet-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-950"
+            : "")
         }
       >
         <div className="flex items-center justify-between gap-2">

@@ -28,9 +28,15 @@ interface TodayTimelineProps {
   refreshKey?: number;
   /** 카드 클릭 시 채팅 입력란에 자동 채울 문장을 부모로 위임 */
   onSelect: (item: ScheduleCardItem) => void;
+  /** 현재 채팅 컨텍스트로 선택된 일정 ID — 해당 카드가 시각적으로 강조됨 */
+  selectedScheduledRunId?: string | null;
 }
 
-export function TodayTimeline({ refreshKey = 0, onSelect }: TodayTimelineProps) {
+export function TodayTimeline({
+  refreshKey = 0,
+  onSelect,
+  selectedScheduledRunId = null,
+}: TodayTimelineProps) {
   const [items, setItems] = useState<ScheduledRunItem[]>([]);
   const [now, setNow] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
@@ -110,7 +116,12 @@ export function TodayTimeline({ refreshKey = 0, onSelect }: TodayTimelineProps) 
       ) : error ? (
         <p className="px-2 py-6 text-center text-[12px] text-red-500">{error}</p>
       ) : (
-        <TimelineList items={cards} now={now} onSelect={onSelect} />
+        <TimelineList
+          items={cards}
+          now={now}
+          onSelect={onSelect}
+          selectedScheduledRunId={selectedScheduledRunId}
+        />
       )}
     </div>
   );

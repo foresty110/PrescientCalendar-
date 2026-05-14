@@ -13,35 +13,38 @@ interface ChatMessage {
   content: string;
 }
 
-interface ChatProps {
-  /** 메시지 한 턴이 끝난 뒤 호출 — 캘린더 새로고침 등 외부 상태 갱신용 */
-  onCompletion?: (toolCalls: { name: string }[]) => void;
-}
-
-/** 외부에서 채팅 입력란을 제어할 수 있는 명령형 핸들.
- *  - prefill: 입력란 자동 채움 + 포커스 (요구사항 §4.1)
- *  - setContext: 헤더 컨텍스트 칩 활성/해제 (요구사항 §4.3) — Phase 2 에선 시각 단서로만,
- *    LLM 호출 시 시스템 프롬프트 주입은 Phase 3 로 미룸 */
+/** 채팅 헤더 컨텍스트 칩에 표시되는 일정 컨텍스트.
+ *  Phase 2 에선 시각 단서 + 타임라인 선택 상태 동기화에만 사용.
+ *  LLM 호출 시 시스템 프롬프트 주입은 Phase 3 로 미룸. */
 export interface ChatContext {
   scheduledRunId: string;
   title: string;
   time: string; // "HH:mm" KST
 }
 
+interface ChatProps {
+  /** 메시지 한 턴이 끝난 뒤 호출 — 캘린더 새로고침 등 외부 상태 갱신용 */
+  onCompletion?: (toolCalls: { name: string }[]) => void;
+  /** 현재 대화 컨텍스트 일정 (controlled — 부모 단계의 단일 진실 원천) */
+  context?: ChatContext | null;
+  /** 헤더 칩 × 클릭 시 호출 */
+  onContextClear?: () => void;
+}
+
+/** 외부에서 채팅 입력란을 자동 채워주는 명령형 핸들 (요구사항 §4.1).
+ *  컨텍스트 상태는 더 이상 핸들에 두지 않고 props 로 controlled. */
 export interface ChatHandle {
   prefill: (text: string) => void;
-  setContext: (ctx: ChatContext | null) => void;
 }
 
 export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
-  { onCompletion },
+  { onCompletion, context = null, onContextClear },
   ref,
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [context, setContext] = useState<ChatContext | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(
@@ -55,7 +58,6 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
           inputRef.current?.setSelectionRange(text.length, text.length);
         });
       },
-      setContext: (ctx) => setContext(ctx),
     }),
     [],
   );
@@ -103,7 +105,7 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
             <span aria-label="대화 중인 일정">{context.time} {context.title}</span>
             <button
               type="button"
-              onClick={() => setContext(null)}
+              onClick={() => onContextClear?.()}
               aria-label="컨텍스트 해제"
               className="ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-violet-500 transition-colors hover:bg-violet-200 hover:text-violet-900 dark:text-violet-300 dark:hover:bg-violet-800 dark:hover:text-violet-50"
             >

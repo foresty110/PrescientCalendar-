@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { Calendar } from "@/components/Calendar";
-import { Chat, type ChatHandle } from "@/components/Chat";
+import { Chat, type ChatContext, type ChatHandle } from "@/components/Chat";
 import { TodayTimeline } from "@/components/timeline/TodayTimeline";
 import type { ScheduleCardItem } from "@/components/timeline/ScheduleCard";
 
@@ -12,12 +12,13 @@ const KST = "Asia/Seoul";
 
 export function AppShell() {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [chatContext, setChatContext] = useState<ChatContext | null>(null);
   const chatRef = useRef<ChatHandle>(null);
 
   function handleTimelineCardSelect(item: ScheduleCardItem) {
     const time = formatInTimeZone(new Date(item.scheduledStartAt), KST, "HH:mm");
     chatRef.current?.prefill(`오늘 ${time} ${item.title} 일정에 대해 이야기하고 싶어`);
-    chatRef.current?.setContext({
+    setChatContext({
       scheduledRunId: item.scheduledRunId,
       title: item.title,
       time,
@@ -31,9 +32,15 @@ export function AppShell() {
         <TodayTimeline
           refreshKey={refreshKey}
           onSelect={handleTimelineCardSelect}
+          selectedScheduledRunId={chatContext?.scheduledRunId ?? null}
         />
       </div>
-      <Chat ref={chatRef} onCompletion={() => setRefreshKey((k) => k + 1)} />
+      <Chat
+        ref={chatRef}
+        onCompletion={() => setRefreshKey((k) => k + 1)}
+        context={chatContext}
+        onContextClear={() => setChatContext(null)}
+      />
     </section>
   );
 }

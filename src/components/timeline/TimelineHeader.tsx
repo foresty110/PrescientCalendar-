@@ -7,19 +7,31 @@ const KST = "Asia/Seoul";
 interface TimelineHeaderProps {
   date: Date;
   count: number;
+  /** "+ 추가" 버튼 클릭 시 호출 — 부모가 채팅 입력란을 포커스 (요구사항 §3.2) */
+  onAddClick?: () => void;
 }
 
-export function TimelineHeader({ date, count }: TimelineHeaderProps) {
+export function TimelineHeader({ date, count, onAddClick }: TimelineHeaderProps) {
   const ymd = formatInTimeZone(date, KST, "M월 d일");
   const weekday = formatInTimeZone(date, KST, "EEEE");
   return (
-    <header className="flex items-baseline justify-between">
+    <header className="flex items-baseline justify-between gap-2">
       <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
         오늘의 일정
         <span className="ml-2 text-[11px] font-normal text-slate-500 dark:text-slate-400">
           {ymd} ({shortWeekday(weekday)}) · {count}건
         </span>
       </h2>
+      {onAddClick && (
+        <button
+          type="button"
+          onClick={onAddClick}
+          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        >
+          <span aria-hidden>+</span>
+          <span>추가</span>
+        </button>
+      )}
     </header>
   );
 }

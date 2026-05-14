@@ -27,7 +27,9 @@ interface ScheduleCardProps {
 
 export function ScheduleCard({ item, highlighted, selected, onSelect }: ScheduleCardProps) {
   const start = new Date(item.scheduledStartAt);
+  const end = new Date(start.getTime() + item.scheduledDurationMin * 60_000);
   const time = formatInTimeZone(start, KST, "HH:mm");
+  const endTime = formatInTimeZone(end, KST, "HH:mm");
   const ariaStatus = STATUS_KO[item.status];
 
   // upcoming / in_progress 카드만 확률 바 노출 (이미 지나간 일정에 미래 예측은 의미 없음)
@@ -77,8 +79,18 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
             )}
           </div>
         </div>
+        <div
+          className={
+            "mt-0.5 text-[11px] tabular-nums " +
+            (highlighted
+              ? "text-[color:var(--color-brand-primary)]"
+              : "text-slate-500 dark:text-slate-400")
+          }
+        >
+          {time} – {endTime}
+        </div>
         {highlighted && (
-          <div className="mt-1 text-[10px] font-medium text-violet-700 dark:text-violet-300">
+          <div className="mt-1 text-[10px] font-medium text-[color:var(--color-brand-primary)]">
             💬 채팅으로 분석 보기 →
           </div>
         )}

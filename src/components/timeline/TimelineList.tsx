@@ -36,13 +36,13 @@ export function TimelineList({
   if (insertAt === -1) insertAt = items.length; // 전부 과거
 
   // 강조할 카드 = NowMarker 직후 첫 upcoming 카드.
-  // 단, 사용자가 어떤 카드를 클릭해 컨텍스트가 활성된 상태에선 "다음 일정 강조" 가
-  // 의미상 중복(=시선 유도가 불필요)되므로 끈다 — selected 한 카드만 시각 강조.
+  // selected 와 무관하게 유지 — 사용자가 다른 카드를 선택해도 "다음 다가올 일정" 의
+  // violet 배경·"💬 채팅으로 분석 보기 →" 마이크로카피는 시선 단서로 계속 보임.
+  // 두 시각 단서(highlighted=다음 일정 알림 / selected=내가 보고 있는 카드)는 의미가 다르므로
+  // 동시에 표시되도 충돌하지 않음.
   const nextCard = items.at(insertAt);
   const highlightedId =
-    selectedScheduledRunId === null && nextCard?.status === "upcoming"
-      ? nextCard.scheduledRunId
-      : null;
+    nextCard?.status === "upcoming" ? nextCard.scheduledRunId : null;
 
   return (
     <ol className="relative space-y-1">

@@ -34,3 +34,4 @@ prisma/migrations/dev-*/
 
 # OpenAPI 생성물은 커밋 (포트폴리오 가시성 위해)
 # openapi.json — 커밋 OK
+.vercel

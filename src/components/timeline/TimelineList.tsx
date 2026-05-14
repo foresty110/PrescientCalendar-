@@ -35,10 +35,14 @@ export function TimelineList({
   );
   if (insertAt === -1) insertAt = items.length; // 전부 과거
 
-  // 강조할 카드 = NowMarker 직후 첫 upcoming 카드
+  // 강조할 카드 = NowMarker 직후 첫 upcoming 카드.
+  // 단, 사용자가 어떤 카드를 클릭해 컨텍스트가 활성된 상태에선 "다음 일정 강조" 가
+  // 의미상 중복(=시선 유도가 불필요)되므로 끈다 — selected 한 카드만 시각 강조.
   const nextCard = items.at(insertAt);
   const highlightedId =
-    nextCard && nextCard.status === "upcoming" ? nextCard.scheduledRunId : null;
+    selectedScheduledRunId === null && nextCard?.status === "upcoming"
+      ? nextCard.scheduledRunId
+      : null;
 
   return (
     <ol className="relative space-y-1">

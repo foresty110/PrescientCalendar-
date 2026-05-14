@@ -20,7 +20,7 @@ export function AppShell() {
   }
 
   return (
-    <section className="grid flex-1 gap-4 lg:grid-cols-[1fr_400px]">
+    <section className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_520px]">
       <div className="flex flex-col gap-4">
         <Calendar refreshKey={refreshKey} />
         <TodayTimeline

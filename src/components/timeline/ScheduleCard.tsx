@@ -2,6 +2,7 @@
 
 import { formatInTimeZone } from "date-fns-tz";
 
+import { InlineProbability } from "./InlineProbability";
 import type { TimelineStatus } from "./status";
 
 const KST = "Asia/Seoul";
@@ -12,20 +13,25 @@ export interface ScheduleCardItem {
   scheduledStartAt: string; // ISO
   scheduledDurationMin: number;
   status: TimelineStatus;
+  feasibilityScore: number | null;
 }
 
 interface ScheduleCardProps {
   item: ScheduleCardItem;
+  /** 미래 일정 중 가장 가까운 한 건만 true — 보라 배경·보더·마이크로카피로 시선 유도 */
+  highlighted?: boolean;
+  /** 현재 채팅 컨텍스트로 활성된 카드 — 외곽 ring + 좌측 violet 줄로 "선택됨" 표시 */
+  selected?: boolean;
   onSelect: (item: ScheduleCardItem) => void;
 }
 
-/** 시간 컬럼(좌) + 노드(가운데 가이드라인) + 카드 본문(우) 3분할.
- *  요구사항 §3.2 의 4가지 상태 (완료 / 지연·미완(needs_retro·missed) / 다가오는 / 진행중)
- *  를 색·취소선·노드 채움으로 구분. Phase 1 한정이라 강조 카드·확률바·메타는 생략. */
-export function ScheduleCard({ item, onSelect }: ScheduleCardProps) {
+export function ScheduleCard({ item, highlighted, selected, onSelect }: ScheduleCardProps) {
   const start = new Date(item.scheduledStartAt);
   const time = formatInTimeZone(start, KST, "HH:mm");
   const ariaStatus = STATUS_KO[item.status];
+
+  // upcoming / in_progress 카드만 확률 바 노출 (이미 지나간 일정에 미래 예측은 의미 없음)
+  const showProbability = item.status === "upcoming" || item.status === "in_progress";
 
   return (
     <li className="grid grid-cols-[32px_16px_1fr] items-start gap-2">
@@ -43,10 +49,16 @@ export function ScheduleCard({ item, onSelect }: ScheduleCardProps) {
       <button
         type="button"
         onClick={() => onSelect(item)}
+        aria-pressed={selected}
         aria-label={`${time} ${item.title} (${ariaStatus}) 일정에 대해 채팅 시작`}
         className={
-          "group w-full rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 " +
-          CARD_CLASS[item.status]
+          "group relative w-full rounded-md text-left text-[13px] transition-all " +
+          (highlighted
+            ? "border border-violet-300 bg-violet-50 px-2 py-2 dark:border-violet-800 dark:bg-violet-950/40"
+            : "px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-900") +
+          (selected
+            ? " ring-2 ring-violet-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-950"
+            : "")
         }
       >
         <div className="flex items-center justify-between gap-2">
@@ -56,12 +68,20 @@ export function ScheduleCard({ item, onSelect }: ScheduleCardProps) {
           >
             {item.title}
           </span>
-          {BADGE[item.status] && (
-            <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] ${BADGE[item.status]?.className}`}>
-              {BADGE[item.status]?.label}
-            </span>
-          )}
+          <div className="flex shrink-0 items-center gap-2">
+            {showProbability && <InlineProbability score={item.feasibilityScore} />}
+            {BADGE[item.status] && (
+              <span className={`rounded px-1.5 py-0.5 text-[10px] ${BADGE[item.status]?.className}`}>
+                {BADGE[item.status]?.label}
+              </span>
+            )}
+          </div>
         </div>
+        {highlighted && (
+          <div className="mt-1 text-[10px] font-medium text-violet-700 dark:text-violet-300">
+            💬 채팅으로 분석 보기 →
+          </div>
+        )}
       </button>
     </li>
   );
@@ -81,14 +101,6 @@ const NODE_CLASS: Record<TimelineStatus, string> = {
   needs_retro: "bg-amber-500",
   in_progress: "bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900 animate-pulse",
   upcoming: "border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-950",
-};
-
-const CARD_CLASS: Record<TimelineStatus, string> = {
-  completed: "",
-  missed: "",
-  needs_retro: "",
-  in_progress: "",
-  upcoming: "",
 };
 
 const TITLE_CLASS: Record<TimelineStatus, string> = {

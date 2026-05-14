@@ -17,6 +17,11 @@ export function AppShell() {
   function handleTimelineCardSelect(item: ScheduleCardItem) {
     const time = formatInTimeZone(new Date(item.scheduledStartAt), KST, "HH:mm");
     chatRef.current?.prefill(`오늘 ${time} ${item.title} 일정에 대해 이야기하고 싶어`);
+    chatRef.current?.setContext({
+      scheduledRunId: item.scheduledRunId,
+      title: item.title,
+      time,
+    });
   }
 
   return (

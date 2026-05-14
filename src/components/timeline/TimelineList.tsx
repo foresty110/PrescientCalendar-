@@ -10,7 +10,8 @@ interface TimelineListProps {
 }
 
 /** 시간순 카드 사이 적절한 위치에 NowMarker 1개 삽입.
- *  엣지: 모든 일정이 과거 → 마지막에, 모든 일정이 미래 → 맨 앞에, 0건 → 빈 상태 한 줄. */
+ *  엣지: 모든 일정이 과거 → 마지막에, 모든 일정이 미래 → 맨 앞에, 0건 → 빈 상태 한 줄.
+ *  강조 대상: 미래(upcoming) 일정 중 시간상 가장 가까운 첫 카드 한 건. */
 export function TimelineList({ items, now, onSelect }: TimelineListProps) {
   if (items.length === 0) {
     return (
@@ -27,6 +28,11 @@ export function TimelineList({ items, now, onSelect }: TimelineListProps) {
   );
   if (insertAt === -1) insertAt = items.length; // 전부 과거
 
+  // 강조할 카드 = NowMarker 직후 첫 upcoming 카드
+  const nextCard = items.at(insertAt);
+  const highlightedId =
+    nextCard && nextCard.status === "upcoming" ? nextCard.scheduledRunId : null;
+
   return (
     <ol className="relative space-y-1">
       {/* 좌측 가이드 라인 (시간 컬럼과 노드 컬럼 사이) */}
@@ -39,7 +45,12 @@ export function TimelineList({ items, now, onSelect }: TimelineListProps) {
       ))}
       <NowMarker now={now} />
       {items.slice(insertAt).map((it) => (
-        <ScheduleCard key={it.scheduledRunId} item={it} onSelect={onSelect} />
+        <ScheduleCard
+          key={it.scheduledRunId}
+          item={it}
+          highlighted={it.scheduledRunId === highlightedId}
+          onSelect={onSelect}
+        />
       ))}
     </ol>
   );

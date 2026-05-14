@@ -91,6 +91,7 @@ export function TodayTimeline({ refreshKey = 0, onSelect }: TodayTimelineProps) 
     title: it.title,
     scheduledStartAt: it.scheduledStartAt,
     scheduledDurationMin: it.scheduledDurationMin,
+    feasibilityScore: it.feasibilityScore,
     status: deriveStatus(
       {
         scheduledStartAt: it.scheduledStartAt,

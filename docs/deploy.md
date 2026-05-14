@@ -62,6 +62,13 @@
 
 ## 5. 문제 해결
 
+### 빌드 실패 — `pnpm install` 단계, `ERR_PNPM_IGNORED_BUILDS`
+
+- 증상: 로그 끝에 `[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @prisma/client, esbuild, sharp, ...` 후 `Command "pnpm install" exited with 1`
+- 원인: pnpm 11이 `--frozen-lockfile` 모드에서 ignored build scripts를 error로 격상
+- 해결: 본 저장소엔 이미 `vercel.json` 으로 install 커맨드 오버라이드 적용됨 (`pnpm install --frozen-lockfile --ignore-scripts`). 만약 fork·새 프로젝트라면 동일 파일 추가
+- 자세히는 `docs/troubleshooting/2026-05-12-ci-pnpm-frozen-lockfile-ignored-builds.md`
+
 ### 빌드 실패 — `prisma migrate deploy` 단계
 
 - 원인: `DATABASE_URL` 누락 또는 잘못된 connection string

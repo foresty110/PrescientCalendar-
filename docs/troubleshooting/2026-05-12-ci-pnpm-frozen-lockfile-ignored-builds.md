@@ -69,3 +69,17 @@ native 의존성(sharp, esbuild)은 prebuilt 바이너리로 작동하므로 빌
 - 다음 native 의존성 추가 시 prebuilt 바이너리 가용성 확인 (postinstall로 native build 강제하는 패키지 회피)
 - 로컬·CI 환경 차이 점검을 PR self-review 체크리스트(docs/git.md §8)에 추가 (별도 PR)
 - **트리거 누락 회고**: 이 3연속 fail은 CLAUDE.md 자동 기록 트리거에 해당했지만 "30분" 시간 기준만 의식해서 로깅 놓침. 같은 PR에서 트리거 표현을 "시간 → 신호" 중심으로 다듬음
+
+## 후속 — Vercel 동일 증상 재발 (2026-05-14)
+
+PR #13 머지 후 첫 Vercel 빌드도 `[ERR_PNPM_IGNORED_BUILDS]`로 exit 1. 본질은 동일 — pnpm 11이 frozen-lockfile 모드에서 ignored build scripts를 error로 격상. GitHub Actions에서 쓴 `--ignore-scripts` 패치를 Vercel에도 적용해야 했다.
+
+해결: 저장소 루트에 `vercel.json` 추가
+```json
+{
+  "installCommand": "pnpm install --frozen-lockfile --ignore-scripts"
+}
+```
+프리스마 클라이언트 생성은 `package.json`의 `vercel-build` 스크립트(`prisma generate && prisma migrate deploy && next build`)가 명시적으로 처리하므로 install 스크립트 차단해도 안전.
+
+교훈: pnpm 11 strict 정책은 frozen-lockfile 쓰는 모든 환경(CI·Vercel·Netlify 등)에서 동일하게 발현. 새 호스팅 환경 추가 시 같은 패치를 동시에 적용해야 함.

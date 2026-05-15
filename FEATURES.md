@@ -41,7 +41,7 @@
   - [x] 5.3-c 0건 빈 상태 UX 풀 — 아이콘 + 카피 + "+ 일정 추가" CTA + 예시 prefill 칩 3개 (`EmptyState.tsx`)
   - [x] 5.3-d 풀 키보드 접근성 — ↑/↓/Home/End 로 카드 이동, 채팅 입력란 Esc 로 컨텍스트 해제, 모든 인터랙티브 요소에 focus-visible 링
   - [x] 5.3-e LLM 응답의 확률/신뢰도/요인 카드 UI — `compute_feasibility` 결과를 채팅 인라인 카드로 (큰 % + 진행 바 + 신뢰도 배지 + rationale). `sampleSize` 추가해 신뢰도 라벨 매핑.
-  - [ ] 5.3-f 시스템 프롬프트에 컨텍스트 일정 메타 주입
+  - [x] 5.3-f 시스템 프롬프트에 컨텍스트 일정 메타 주입 — `chatContext` (scheduledRunId/title/time/status) 가 활성이면 채팅 API 요청 본문에 동봉, `buildSystemPrompt` 가 "## 사용자가 현재 보고 있는 일정" 섹션을 시스템 프롬프트 끝에 덧붙임.
 
 ## 인프라·포트폴리오
 - [x] I.1 GitHub Actions CI (typecheck/lint/test/build) 초록 배지 — README 상단에 `actions/workflows/ci.yml/badge.svg` 추가

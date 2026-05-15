@@ -23,18 +23,32 @@ Anthropic tool_use 정의의 단일 출처. 이 문서가 `src/lib/llm/tools.ts`
     "freq": "DAILY|WEEKLY|MONTHLY",
     "byDay": ["MO","TU","WE","TH","FR","SA","SU"]?,
     "until": "ISO-8601 date?"
-  } | null
+  } | null,
+  "force": "boolean? — true 면 충돌 무시하고 강제 생성 (UI '그래도 만들기' 버튼 또는 사용자 명시 요청 시에만)"
 }
 ```
 
-**출력**:
+**출력** (union):
+
+성공:
 ```json
-{ "eventId": "string", "firstScheduledRunId": "string", "occurrencesPlanned": "integer" }
+{ "ok": true, "eventId": "string", "firstScheduledRunId": "string", "occurrencesPlanned": "integer" }
+```
+
+충돌 거부:
+```json
+{
+  "ok": false,
+  "reason": "conflict",
+  "conflicts": [{ "scheduledRunId": "string", "title": "string", "startAt": "ISO" }],
+  "suggestedAlternatives": [{ "startAt": "ISO", "label": "30분 뒤" }, ...],
+  "originalInput": { /* 입력 그대로 — '그래도 만들기' 재호출에 사용 */ }
+}
 ```
 
 **주의**:
 - 과거 시각은 거부 → assistant가 재질문
-- 같은 시간 다른 ScheduledRun이 있으면 `conflictWarning: [...]` 반환 → assistant가 사용자에게 확인 후 재호출
+- 충돌이 있으면 일정은 생성되지 않고 `ok: false` 결과 반환. 클라이언트가 자동으로 대안 카드 UI 를 렌더하므로 assistant 는 한 줄로 알리기만 한다 (긴 대안 나열 X). 사용자가 명시적으로 "그래도 만들어줘" 라고 동의하면 `force: true` 로 같은 인자 재호출.
 
 ---
 

@@ -244,7 +244,11 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
         )}
       </header>
 
-      <ol ref={listRef} className="flex-1 space-y-3 overflow-y-auto text-sm">
+      {/* min-h-0 가 핵심 — flex item 의 디폴트 min-height 가 auto(=min-content) 라
+          ol 가 메시지 콘텐츠 만큼 자연 높이로 부푼다. 그러면 부모(Chat outer) 와 그 부모(grid cell, page)
+          까지 같이 늘어나 "채팅 UI 가 메시지마다 길어지는" 현상 발생. min-h-0 로 풀어주면
+          ol 는 부모가 허용한 영역만큼만 보이고, overflow-y-auto 가 안쪽 스크롤을 담당한다. */}
+      <ol ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto text-sm">
         {messages.length === 0 && !isPending && (
           <li className="rounded-md bg-slate-50 p-3 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
             안녕하세요. 일정을 자연어로 만들고 회고할 수 있게 도와드릴게요.

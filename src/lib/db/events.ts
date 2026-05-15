@@ -26,7 +26,9 @@ export interface ConflictItem {
 export interface AlternativeSlot {
   /** 제안 시각 (ISO 문자열) — 다음 create_event 재호출에 그대로 사용 */
   startAt: string;
-  /** 사용자에게 보일 자연어 라벨 — "30분 뒤" / "내일 같은 시각" */
+  /** 제안 소요 시간(분). 원래 요청과 같거나, 가용 시간이 부족하면 짧게 줄여서 제안된 값. */
+  durationMin: number;
+  /** 사용자에게 보일 자연어 라벨 — "같은 날 가까운 시간" / "내일 같은 시각" 등 */
   label: string;
 }
 
@@ -142,45 +144,136 @@ export async function createEvent(
   };
 }
 
-/** 충돌이 발생한 baseStart 주변에서 충돌 없는 대안 시각 후보를 최대 4개 반환.
- *  오프셋 후보를 가까운 것부터 검사. 사용자 일정이 빽빽해 충돌이 많아도 충분한 후보를 보장하기
- *  위해 풀을 넓게 잡았다(±15·±30·±45·±60·±90·±120·+180·+24h·+48h). 과거 시각·또 충돌 나는
- *  시각은 자동 제외. */
+/** 사용자가 명시한 두 가지 대안 전략으로 후보 슬롯을 반환:
+ *   1) 같은 날 가장 가까운 가용 시각 — 자리가 좁으면 소요시간을 줄여서라도 끼워 넣기
+ *   2) 내일 같은 시각 — 그 시각이 충돌이면 내일 안에서 가장 가까운 가용 시각 + 소요시간 축소
+ *  각 옵션이 5분 미만 슬롯밖에 못 찾으면 그 옵션은 건너뛴다. 결과는 최대 2개. */
 async function suggestAlternatives(
   userId: string,
   baseStart: Date,
-  durationMin: number,
+  requestedDurationMin: number,
   now: Date,
 ): Promise<AlternativeSlot[]> {
-  const candidates: { offsetMin: number; label: string }[] = [
-    { offsetMin: 15, label: "15분 뒤" },
-    { offsetMin: -15, label: "15분 앞" },
-    { offsetMin: 30, label: "30분 뒤" },
-    { offsetMin: -30, label: "30분 앞" },
-    { offsetMin: 45, label: "45분 뒤" },
-    { offsetMin: -45, label: "45분 앞" },
-    { offsetMin: 60, label: "1시간 뒤" },
-    { offsetMin: -60, label: "1시간 앞" },
-    { offsetMin: 90, label: "1시간 30분 뒤" },
-    { offsetMin: -90, label: "1시간 30분 앞" },
-    { offsetMin: 120, label: "2시간 뒤" },
-    { offsetMin: -120, label: "2시간 앞" },
-    { offsetMin: 180, label: "3시간 뒤" },
-    { offsetMin: 24 * 60, label: "내일 같은 시각" },
-    { offsetMin: 2 * 24 * 60, label: "모레 같은 시각" },
+  const out: AlternativeSlot[] = [];
+
+  const sameDay = await findNearestAvailableSlot(
+    userId,
+    baseStart,
+    requestedDurationMin,
+    now,
+    /*confineToSameKstDay=*/ true,
+    /*labelPrefix=*/ "같은 날",
+  );
+  if (sameDay) out.push(sameDay);
+
+  const tomorrowBase = new Date(baseStart.getTime() + 24 * 60 * 60 * 1000);
+  const tomorrow = await findTomorrowSlot(userId, tomorrowBase, requestedDurationMin, now);
+  if (tomorrow) out.push(tomorrow);
+
+  return out;
+}
+
+/** baseStart 부근에서 충돌 안 나는 가용 슬롯을 찾는다. confineToSameKstDay=true 면 KST 자정을
+ *  넘는 후보를 무시. 후보 시각에 시작 가능한지(다른 일정 진행 중 X) 확인 후, 그 시각에서
+ *  들어갈 수 있는 최대 소요시간을 다음 일정 시작 시각까지로 계산해 returned durationMin 으로 사용. */
+async function findNearestAvailableSlot(
+  userId: string,
+  baseStart: Date,
+  requestedDurationMin: number,
+  now: Date,
+  confineToSameKstDay: boolean,
+  labelPrefix: string,
+): Promise<AlternativeSlot | null> {
+  // 가까운 offset 부터 ±. baseStart 자체도 0 offset 으로 한 번 시도 (다른 일정과 정확히 같은 시각에 시작 못 하면 skip).
+  const offsets: number[] = [
+    0, 30, -30, 60, -60, 90, -90, 120, -120, 180, -180, 240, -240,
   ];
 
-  const out: AlternativeSlot[] = [];
-  for (const c of candidates) {
-    if (out.length >= 4) break;
-    const candidate = new Date(baseStart.getTime() + c.offsetMin * 60_000);
-    if (candidate.getTime() < now.getTime()) continue; // 과거 시각 후보 제외
-    const conflicts = await findConflicts(userId, candidate, durationMin);
-    if (conflicts.length === 0) {
-      out.push({ startAt: candidate.toISOString(), label: c.label });
+  const baseDayKey = kstDayKey(baseStart);
+
+  for (const offsetMin of offsets) {
+    const candidate = new Date(baseStart.getTime() + offsetMin * 60_000);
+    if (candidate.getTime() < now.getTime()) continue;
+    if (confineToSameKstDay && kstDayKey(candidate) !== baseDayKey) continue;
+
+    // 이 시각에 시작할 수 있는지 — 1분짜리 충돌 체크로 "이 순간 다른 일정 진행 중?" 확인.
+    const blocking = await findConflicts(userId, candidate, 1);
+    if (blocking.length > 0) continue;
+
+    const maxFit = await computeMaxGap(userId, candidate);
+    if (maxFit < 5) continue;
+    const actualDuration = Math.min(requestedDurationMin, maxFit);
+
+    return {
+      startAt: candidate.toISOString(),
+      durationMin: actualDuration,
+      label:
+        actualDuration < requestedDurationMin
+          ? `${labelPrefix} ${formatKstHm(candidate)} (${actualDuration}분으로)`
+          : `${labelPrefix} ${formatKstHm(candidate)}`,
+    };
+  }
+  return null;
+}
+
+/** 옵션 2 — 내일 같은 시각 우선. 충돌이면 그 날 안에서 가장 가까운 가용 슬롯으로 fallback. */
+async function findTomorrowSlot(
+  userId: string,
+  tomorrowSameTime: Date,
+  requestedDurationMin: number,
+  now: Date,
+): Promise<AlternativeSlot | null> {
+  // 1) 내일 같은 시각이 충돌 없고 충분히 가용하면 그대로.
+  const blocking = await findConflicts(userId, tomorrowSameTime, 1);
+  if (blocking.length === 0) {
+    const maxFit = await computeMaxGap(userId, tomorrowSameTime);
+    if (maxFit >= 5) {
+      const actualDuration = Math.min(requestedDurationMin, maxFit);
+      return {
+        startAt: tomorrowSameTime.toISOString(),
+        durationMin: actualDuration,
+        label:
+          actualDuration < requestedDurationMin
+            ? `내일 같은 시각 (${actualDuration}분으로)`
+            : "내일 같은 시각",
+      };
     }
   }
-  return out;
+
+  // 2) 같은 시각이 막혀 있으면 — 내일 안에서 가장 가까운 가용 슬롯으로 fallback.
+  return findNearestAvailableSlot(
+    userId,
+    tomorrowSameTime,
+    requestedDurationMin,
+    now,
+    /*confineToSameKstDay=*/ true,
+    /*labelPrefix=*/ "내일",
+  );
+}
+
+/** candidateStart 부터 다음 일정 시작 시각까지의 분 단위 거리. 다음 일정 없으면 충분히 큰 값. */
+async function computeMaxGap(userId: string, candidateStart: Date): Promise<number> {
+  const nextRun = await prisma.scheduledRun.findFirst({
+    where: { userId, scheduledStartAt: { gt: candidateStart } },
+    select: { scheduledStartAt: true },
+    orderBy: { scheduledStartAt: "asc" },
+  });
+  if (!nextRun) return 24 * 60; // 다음 일정 없음 → 24h 까지 보장
+  const gapMs = nextRun.scheduledStartAt.getTime() - candidateStart.getTime();
+  return Math.max(0, Math.floor(gapMs / 60_000));
+}
+
+/** KST 기준 'yyyy-MM-dd' 키 — UTC+9 고정이므로 단순 산술. */
+function kstDayKey(d: Date): string {
+  return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+/** KST 기준 'HH:mm' 표시. */
+function formatKstHm(d: Date): string {
+  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const h = kst.getUTCHours().toString().padStart(2, "0");
+  const m = kst.getUTCMinutes().toString().padStart(2, "0");
+  return `${h}:${m}`;
 }
 
 export interface ScheduledRunListItem {

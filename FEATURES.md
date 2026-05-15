@@ -42,6 +42,7 @@
   - [x] 5.3-d 풀 키보드 접근성 — ↑/↓/Home/End 로 카드 이동, 채팅 입력란 Esc 로 컨텍스트 해제, 모든 인터랙티브 요소에 focus-visible 링
   - [x] 5.3-e LLM 응답의 확률/신뢰도/요인 카드 UI — `compute_feasibility` 결과를 채팅 인라인 카드로 (큰 % + 진행 바 + 신뢰도 배지 + rationale). `sampleSize` 추가해 신뢰도 라벨 매핑.
   - [x] 5.3-f 시스템 프롬프트에 컨텍스트 일정 메타 주입 — `chatContext` (scheduledRunId/title/time/status) 가 활성이면 채팅 API 요청 본문에 동봉, `buildSystemPrompt` 가 "## 사용자가 현재 보고 있는 일정" 섹션을 시스템 프롬프트 끝에 덧붙임.
+- [ ] 5.5 캘린더 시각 정합 — 오늘 원과 일반 날짜 숫자의 시작 위치 통일(셀 높이 약간 확대) · 주말(토/일) 숫자 빨강 · 공휴일은 셀 상단 빨강 라벨 줄로 이름 표시(데이터: `date-holidays`)
 - [x] 5.4 캘린더 날짜 클릭 → 타임라인이 그 날짜로 갱신 — `selectedDateKey` state (AppShell), Calendar 셀 클릭(role=button + Enter/Space) + 선택 셀 violet ring, 일정 chip 은 stopPropagation 으로 회고 모달 동작 유지. 헤더 제목 "오늘의 일정" → "일정 목록" 변경, 메타 라인은 선택 날짜로 적응. EmptyState/prefill 카피는 `pickDateLabel` 로 "오늘"/"어제"/"내일"/"M월 d일 (요일)" 자연어. 다른 날짜 보고 있을 땐 NowMarker 숨김 + 1분 setInterval 정지.
 
 ## 인프라·포트폴리오

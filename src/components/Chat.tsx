@@ -178,15 +178,22 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
         };
         const feasibilityCards = extractFeasibilityCards(data.toolCalls);
         const conflictCards = extractConflictCards(data.toolCalls);
-        setMessages((prev) => [
-          ...prev,
-          {
+        // 충돌 대안은 텍스트 답변과 의미·시각 모두 다른 UI 라 별도 메시지(bubble) 로 분리.
+        // feasibility 카드는 텍스트와 보완 관계라 같은 메시지에 유지.
+        const appended: ChatMessage[] = [];
+        if (data.text.trim()) {
+          appended.push({
             role: "assistant",
             content: data.text,
             ...(feasibilityCards.length > 0 ? { feasibilityCards } : {}),
-            ...(conflictCards.length > 0 ? { conflictCards } : {}),
-          },
-        ]);
+          });
+        } else if (feasibilityCards.length > 0) {
+          appended.push({ role: "assistant", content: "", feasibilityCards });
+        }
+        if (conflictCards.length > 0) {
+          appended.push({ role: "assistant", content: "", conflictCards });
+        }
+        setMessages((prev) => [...prev, ...appended]);
         if (data.toolCalls.length > 0) onCompletion?.(data.toolCalls);
       } catch (e) {
         setError(e instanceof Error ? e.message : "알 수 없는 오류");
@@ -195,13 +202,13 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
   }
 
   /** 충돌 카드에서 대안 시각 버튼 클릭 → 자연어 채팅 메시지로 즉시 전송.
-   *  LLM 이 create_event 를 새 시각·동일 제목으로 다시 호출하게 한다. */
+   *  alternative 의 durationMin 이 원래 요청과 다를 수 있어(카드에서 사용자가 동의함) 그 값을 사용. */
   function pickConflictAlternative(
-    alt: { startAt: string; label: string },
+    alt: { startAt: string; durationMin: number; label: string },
     original: ConflictAlternativesData["originalInput"],
   ) {
     const newTime = formatInTimeZone(new Date(alt.startAt), KST, "M월 d일 HH:mm");
-    send(`${newTime} 로 ${original.title} ${original.durationMin}분 잡아줘`);
+    send(`${newTime} 로 ${original.title} ${alt.durationMin}분 잡아줘`);
   }
 
   // 빈 상태뿐 아니라 한 턴 대화가 마무리된 시점(마지막 메시지가 assistant) 에도 다시 노출 —
@@ -211,7 +218,9 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
     !isPending && (messages.length === 0 || lastMessage?.role === "assistant");
 
   return (
-    <div className="flex h-full min-h-[400px] flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
+    // h-full + min-h-0: 부모 grid item 의 stretch 로 결정된 height 안에서만 늘어남.
+    // 좌측 컬럼(Calendar + TodayTimeline) 끝과 동일한 하단 위치에 자연스럽게 맞춰지고, 메시지 ol 만 내부 스크롤.
+    <div className="flex h-full min-h-0 flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
       <header className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
         <span
           aria-hidden

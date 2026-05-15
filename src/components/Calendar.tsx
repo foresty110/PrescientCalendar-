@@ -2,10 +2,24 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
+import Holidays from "date-holidays";
 
 import { RetrospectModal, type RetrospectModalTarget } from "@/components/RetrospectModal";
 
 const KST = "Asia/Seoul";
+
+// 한국 법정공휴일(대체공휴일 포함) 조회용 — 모듈 스코프에서 1회 인스턴스화해 재사용.
+// date-holidays 는 country-code 별 정적 룰셋이라 호출이 가볍지만, 인스턴스 자체는 룰 테이블을 적재하므로
+// 컴포넌트마다 새로 만들지 않는다.
+const HD = new Holidays("KR");
+
+/** 주어진 KST 날짜에 해당하는 한국 법정공휴일 이름 목록. type==="public" 만 채택해
+ *  '~의 날' 같은 기념일/관찰일은 빨강 라벨에서 제외한다. 같은 날 둘 이상이 겹치면 모두 반환. */
+function publicHolidayNames(date: Date): string[] {
+  const result = HD.isHoliday(date);
+  if (!result) return [];
+  return result.filter((h) => h.type === "public").map((h) => h.name);
+}
 
 interface ScheduledRunItem {
   scheduledRunId: string;
@@ -187,19 +201,40 @@ export function Calendar({
         </div>
       ) : (
       <div className="grid flex-1 grid-cols-7 gap-px overflow-hidden rounded-xl border border-slate-300 bg-slate-300 text-xs dark:border-slate-700 dark:bg-slate-700">
-        {["월", "화", "수", "목", "금", "토", "일"].map((d) => (
-          <div
-            key={d}
-            className="bg-slate-100 px-2 py-1 text-center text-[11px] font-medium text-slate-700 dark:bg-slate-900 dark:text-slate-300"
-          >
-            {d}
-          </div>
-        ))}
+        {["월", "화", "수", "목", "금", "토", "일"].map((d, i) => {
+          // i===5(토), i===6(일) → 주말. 기존 emerald/amber/slate 톤과 어울리도록 강도는 500/400 으로 절제.
+          const isWeekend = i >= 5;
+          return (
+            <div
+              key={d}
+              className={
+                "bg-slate-100 px-2 py-1 text-center text-[11px] font-medium dark:bg-slate-900 " +
+                (isWeekend
+                  ? "text-red-500 dark:text-red-400"
+                  : "text-slate-700 dark:text-slate-300")
+              }
+            >
+              {d}
+            </div>
+          );
+        })}
         {days.map((d) => {
           const key = formatInTimeZone(d.date, KST, "yyyy-MM-dd");
           const dayItems = itemsByDay.get(key) ?? [];
           const isSelected = key === selectedDateKey;
           const dateAriaLabel = `${formatInTimeZone(d.date, KST, "M월 d일")} 선택`;
+          // ISO 요일: 월=1 ... 토=6, 일=7. 토·일 → 주말.
+          const isoWeekday = formatInTimeZone(d.date, KST, "i");
+          const isWeekend = isoWeekday === "6" || isoWeekday === "7";
+          const holidayNames = publicHolidayNames(d.date);
+          const isHoliday = holidayNames.length > 0;
+          // 숫자 색: 이번 달이 아니면 옅은 회색 우선, 이번 달이면 주말·공휴일 빨강, 아니면 슬레이트.
+          // 같은 빨강 톤(red-500/dark red-400) 으로 통일해 헤더 요일과 시각 일관.
+          const dateNumberColor = !d.inMonth
+            ? "text-slate-300 dark:text-slate-700"
+            : isWeekend || isHoliday
+              ? "text-red-500 dark:text-red-400"
+              : "text-slate-700 dark:text-slate-200";
           return (
             // 셀은 <button> 대신 role="button" div — 안에 일정 chip <button> 이 들어가야 해서
             // 중첩 interactive content 금지 규칙을 피한다. Enter/Space 키도 명시적으로 처리.
@@ -217,29 +252,44 @@ export function Calendar({
               aria-pressed={isSelected}
               aria-label={dateAriaLabel}
               className={
-                "flex h-[64px] cursor-pointer flex-col overflow-hidden px-1 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 " +
-                (d.inMonth
-                  ? "text-slate-700 dark:text-slate-200 "
-                  : "text-slate-300 dark:text-slate-700 ") +
+                // 셀 높이를 64→76 으로 키워 (1) 오늘 원과 일반 숫자가 동일한 20px 박스로 정렬돼도 답답하지 않고
+                // (2) 공휴일 라벨 한 줄이 들어갈 공간 확보.
+                "flex h-[76px] cursor-pointer flex-col overflow-hidden px-1 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 " +
                 (isSelected
                   ? "bg-blue-50 dark:bg-blue-950/40 "
                   : "bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900 ")
               }
             >
               <div className="mb-0.5 flex justify-end">
-                {d.isToday ? (
-                  <span
-                    aria-label="오늘"
-                    className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[11px] font-semibold text-white"
-                  >
-                    {formatInTimeZone(d.date, KST, "d")}
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-medium">
-                    {formatInTimeZone(d.date, KST, "d")}
-                  </span>
-                )}
+                {/* 오늘이든 일반이든 같은 h-5 w-5 inline-flex 박스로 감싸 시작 위치 정렬.
+                    오늘만 파란 원 + 흰 글씨, 일반은 투명 배경 + 색만 dateNumberColor 로 결정. */}
+                <span
+                  aria-label={d.isToday ? "오늘" : undefined}
+                  className={
+                    "inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold " +
+                    (d.isToday
+                      ? "bg-blue-500 text-white"
+                      : dateNumberColor)
+                  }
+                >
+                  {formatInTimeZone(d.date, KST, "d")}
+                </span>
               </div>
+              {isHoliday && (
+                // 공휴일 라벨 — 이름 한 줄, 빨강. 같은 날 두 공휴일 겹치면 ', ' 로 연결.
+                // truncate 로 셀 폭 넘기지 않게. 이번 달이 아닌 셀에서는 숫자처럼 옅게 처리.
+                <div
+                  className={
+                    "mb-0.5 truncate text-[10px] font-medium " +
+                    (d.inMonth
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-red-300 dark:text-red-900")
+                  }
+                  title={holidayNames.join(", ")}
+                >
+                  {holidayNames.join(", ")}
+                </div>
+              )}
               <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
                 {dayItems.slice(0, 2).map((it) => {
                   const isPast = new Date(it.scheduledStartAt).getTime() <= now.getTime();

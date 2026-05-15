@@ -8,12 +8,36 @@ import {
   useTransition,
 } from "react";
 
+import {
+  FeasibilityCard,
+  feasibilityOutputSchema,
+  type FeasibilityCardData,
+} from "@/components/FeasibilityCard";
+
+interface ToolCallSummary {
+  name: string;
+  output?: unknown;
+}
+
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   /** 사용자 메시지가 어떤 경로로 생성됐는지 표시할 작은 라벨 (예: "일정 카드에서 시작됨").
    *  요구사항 §4.1 의 "↗ 일정 카드에서 시작됨" 메타 표기. */
   meta?: string;
+  /** assistant 메시지에 한해 — compute_feasibility tool 호출 결과를 카드로 본문 아래 인라인 표시. */
+  feasibilityCards?: FeasibilityCardData[];
+}
+
+/** assistant 응답에서 compute_feasibility 결과만 추려 Zod 로 형태 검증.
+ *  여러 일정에 대해 한 턴에 여러 번 호출될 수 있어 배열로 모은다. 형태가 어긋나는 출력은 조용히 버린다 —
+ *  LLM 텍스트 본문은 어차피 따로 살아남는다. */
+function extractFeasibilityCards(toolCalls: ToolCallSummary[]): FeasibilityCardData[] {
+  return toolCalls
+    .filter((c) => c.name === "compute_feasibility")
+    .map((c) => feasibilityOutputSchema.safeParse(c.output))
+    .filter((r): r is { success: true; data: FeasibilityCardData } => r.success)
+    .map((r) => r.data);
 }
 
 /** 채팅 헤더 컨텍스트 칩에 표시되는 일정 컨텍스트.
@@ -105,9 +129,17 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
         }
         const data = (await res.json()) as {
           text: string;
-          toolCalls: { name: string }[];
+          toolCalls: ToolCallSummary[];
         };
-        setMessages((prev) => [...prev, { role: "assistant", content: data.text }]);
+        const feasibilityCards = extractFeasibilityCards(data.toolCalls);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: data.text,
+            ...(feasibilityCards.length > 0 ? { feasibilityCards } : {}),
+          },
+        ]);
         if (data.toolCalls.length > 0) onCompletion?.(data.toolCalls);
       } catch (e) {
         setError(e instanceof Error ? e.message : "알 수 없는 오류");
@@ -154,11 +186,15 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
               </span>
             </li>
           ) : (
-            <li
-              key={i}
-              className="mr-8 rounded-md bg-slate-100 px-3 py-2 dark:bg-slate-800"
-            >
-              {m.content || (isPending ? "…" : null)}
+            <li key={i} className="mr-8 space-y-2">
+              {(m.content || isPending) && (
+                <div className="rounded-md bg-slate-100 px-3 py-2 dark:bg-slate-800">
+                  {m.content || "…"}
+                </div>
+              )}
+              {m.feasibilityCards?.map((card, j) => (
+                <FeasibilityCard key={j} data={card} />
+              ))}
             </li>
           ),
         )}

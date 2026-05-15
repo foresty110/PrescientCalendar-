@@ -114,7 +114,7 @@ export function Calendar({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
+    <div className="flex flex-col gap-2 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
       <header className="flex items-center justify-between gap-2 text-sm">
         <div className="flex items-center gap-1">
           <button
@@ -163,8 +163,8 @@ export function Calendar({
             지연
           </li>
           <li className="inline-flex items-center gap-1">
-            <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600" />
-            미만
+            <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-slate-400 dark:bg-slate-500" />
+            미완
           </li>
         </ul>
       </header>
@@ -186,11 +186,11 @@ export function Calendar({
           ⚠ {error}
         </div>
       ) : (
-      <div className="grid flex-1 grid-cols-7 gap-px overflow-hidden rounded-xl border border-slate-200/70 bg-slate-200/70 text-xs dark:border-slate-800 dark:bg-slate-800">
+      <div className="grid flex-1 grid-cols-7 gap-px overflow-hidden rounded-xl border border-slate-300 bg-slate-300 text-xs dark:border-slate-700 dark:bg-slate-700">
         {["월", "화", "수", "목", "금", "토", "일"].map((d) => (
           <div
             key={d}
-            className="bg-slate-50 px-2 py-1 text-center text-slate-500 dark:bg-slate-900 dark:text-slate-400"
+            className="bg-slate-100 px-2 py-1 text-center text-[11px] font-medium text-slate-700 dark:bg-slate-900 dark:text-slate-300"
           >
             {d}
           </div>
@@ -217,23 +217,27 @@ export function Calendar({
               aria-pressed={isSelected}
               aria-label={dateAriaLabel}
               className={
-                "min-h-[56px] cursor-pointer px-1.5 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 " +
-                (d.inMonth ? "" : "text-slate-300 dark:text-slate-700 ") +
+                "min-h-[44px] cursor-pointer px-1 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 " +
+                (d.inMonth
+                  ? "text-slate-700 dark:text-slate-200 "
+                  : "text-slate-300 dark:text-slate-700 ") +
                 (isSelected
                   ? "bg-blue-50 dark:bg-blue-950/40 "
                   : "bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900 ")
               }
             >
-              <div className="mb-1 flex justify-end">
+              <div className="mb-0.5 flex justify-end">
                 {d.isToday ? (
                   <span
                     aria-label="오늘"
-                    className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[11px] font-medium text-white"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[11px] font-semibold text-white"
                   >
                     {formatInTimeZone(d.date, KST, "d")}
                   </span>
                 ) : (
-                  <span>{formatInTimeZone(d.date, KST, "d")}</span>
+                  <span className="text-[11px] font-medium">
+                    {formatInTimeZone(d.date, KST, "d")}
+                  </span>
                 )}
               </div>
               <ul className="space-y-0.5">
@@ -257,12 +261,12 @@ export function Calendar({
                         }}
                         disabled={!isPast}
                         className={
-                          "flex w-full items-center gap-1 truncate rounded px-1.5 py-0.5 text-left text-[10px] " +
+                          "flex w-full items-center gap-1 truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium " +
                           (hasRetro
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                            ? "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100"
                             : isPast
-                              ? "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-100 dark:hover:bg-amber-900/60"
-                              : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200") +
+                              ? "bg-amber-200 text-amber-900 hover:bg-amber-300 dark:bg-amber-900/60 dark:text-amber-100 dark:hover:bg-amber-900/80"
+                              : "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-100") +
                           (isPast ? " cursor-pointer" : " cursor-default")
                         }
                         title={feasibilityTooltip(it, isPast, hasRetro)}
@@ -276,7 +280,9 @@ export function Calendar({
                   );
                 })}
                 {dayItems.length > 2 && (
-                  <li className="text-[10px] text-slate-400">+{dayItems.length - 2}</li>
+                  <li className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                    +{dayItems.length - 2}
+                  </li>
                 )}
               </ul>
             </div>

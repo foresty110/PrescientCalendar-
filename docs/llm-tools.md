@@ -23,8 +23,7 @@ Anthropic tool_use 정의의 단일 출처. 이 문서가 `src/lib/llm/tools.ts`
     "freq": "DAILY|WEEKLY|MONTHLY",
     "byDay": ["MO","TU","WE","TH","FR","SA","SU"]?,
     "until": "ISO-8601 date?"
-  } | null,
-  "force": "boolean? — true 면 충돌 무시하고 강제 생성 (UI '그래도 만들기' 버튼 또는 사용자 명시 요청 시에만)"
+  } | null
 }
 ```
 
@@ -48,7 +47,8 @@ Anthropic tool_use 정의의 단일 출처. 이 문서가 `src/lib/llm/tools.ts`
 
 **주의**:
 - 과거 시각은 거부 → assistant가 재질문
-- 충돌이 있으면 일정은 생성되지 않고 `ok: false` 결과 반환. 클라이언트가 자동으로 대안 카드 UI 를 렌더하므로 assistant 는 한 줄로 알리기만 한다 (긴 대안 나열 X). 사용자가 명시적으로 "그래도 만들어줘" 라고 동의하면 `force: true` 로 같은 인자 재호출.
+- 충돌이 있으면 일정은 생성되지 않고 `ok: false` 결과 반환. 클라이언트가 자동으로 대안 카드 UI 를 렌더하므로 assistant 는 응답 텍스트를 비우거나 매우 짧은 한 마디만 (카드와 중복 회피).
+- **충돌 우회 옵션 없음.** force 같은 인자는 없다. 사용자가 "그래도 만들어줘" 라고 해도 다시 호출하지 말 것 — 항상 대안에서 선택해야 한다.
 
 ---
 

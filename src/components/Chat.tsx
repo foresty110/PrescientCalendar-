@@ -126,7 +126,7 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
               type="button"
               onClick={() => onContextClear?.()}
               aria-label="컨텍스트 해제"
-              className="ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-violet-500 transition-colors hover:bg-violet-200 hover:text-violet-900 dark:text-violet-300 dark:hover:bg-violet-800 dark:hover:text-violet-50"
+              className="ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-violet-500 transition-colors hover:bg-violet-200 hover:text-violet-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:text-violet-300 dark:hover:bg-violet-800 dark:hover:text-violet-50 dark:focus-visible:ring-offset-slate-950"
             >
               ×
             </button>
@@ -181,6 +181,14 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
           name="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            // 컨텍스트 활성 상태에서 Esc → 칩 해제. 입력값 자체엔 영향 없음
+            // (그래야 prefill 된 텍스트를 잃지 않는다).
+            if (e.key === "Escape" && context) {
+              e.preventDefault();
+              onContextClear?.();
+            }
+          }}
           placeholder="일정을 자연어로 입력하세요…"
           disabled={isPending}
           className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900"

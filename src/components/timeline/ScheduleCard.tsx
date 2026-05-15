@@ -1,5 +1,6 @@
 "use client";
 
+import type { KeyboardEvent } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { InlineProbability } from "./InlineProbability";
@@ -67,10 +68,13 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
       <button
         type="button"
         onClick={() => onSelect(item)}
+        onKeyDown={handleCardKeyDown}
         aria-pressed={selected}
         aria-label={`${ariaWhen} ${item.title} (${ariaStatus}) 일정에 대해 채팅 시작`}
+        data-timeline-card="true"
         className={
           "group relative w-full rounded-md text-left text-[13px] transition-all " +
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 " +
           (highlighted
             ? "border border-violet-300 bg-violet-50 px-2 py-2 dark:border-violet-800 dark:bg-violet-950/40"
             : "px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-900") +
@@ -121,6 +125,29 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
       </button>
     </li>
   );
+}
+
+/** 화살표/Home/End 로 타임라인 카드 사이를 이동. data-timeline-card 가 붙은 모든 카드 button 을
+ *  순서대로 모아 현재 포커스 위치 기준 이동. 종일·시간형 어느 섹션에 있어도 같은 흐름. */
+function handleCardKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
+  const navKey =
+    e.key === "ArrowDown" ||
+    e.key === "ArrowUp" ||
+    e.key === "Home" ||
+    e.key === "End";
+  if (!navKey) return;
+  e.preventDefault();
+  const all = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-timeline-card="true"]'),
+  );
+  if (all.length === 0) return;
+  const cur = all.indexOf(e.currentTarget);
+  let nextIdx = cur;
+  if (e.key === "ArrowDown") nextIdx = Math.min(cur + 1, all.length - 1);
+  else if (e.key === "ArrowUp") nextIdx = Math.max(cur - 1, 0);
+  else if (e.key === "Home") nextIdx = 0;
+  else if (e.key === "End") nextIdx = all.length - 1;
+  all.at(nextIdx)?.focus();
 }
 
 const STATUS_KO: Record<TimelineStatus, string> = {

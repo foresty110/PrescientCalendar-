@@ -2,24 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
-import Holidays from "date-holidays";
 
 import { RetrospectModal, type RetrospectModalTarget } from "@/components/RetrospectModal";
+import { lookupHolidayName } from "@/lib/holidays/kr";
 
 const KST = "Asia/Seoul";
-
-// 한국 법정공휴일(대체공휴일 포함) 조회용 — 모듈 스코프에서 1회 인스턴스화해 재사용.
-// date-holidays 는 country-code 별 정적 룰셋이라 호출이 가볍지만, 인스턴스 자체는 룰 테이블을 적재하므로
-// 컴포넌트마다 새로 만들지 않는다.
-const HD = new Holidays("KR");
-
-/** 주어진 KST 날짜에 해당하는 한국 법정공휴일 이름 목록. type==="public" 만 채택해
- *  '~의 날' 같은 기념일/관찰일은 빨강 라벨에서 제외한다. 같은 날 둘 이상이 겹치면 모두 반환. */
-function publicHolidayNames(date: Date): string[] {
-  const result = HD.isHoliday(date);
-  if (!result) return [];
-  return result.filter((h) => h.type === "public").map((h) => h.name);
-}
 
 interface ScheduledRunItem {
   scheduledRunId: string;
@@ -226,8 +213,8 @@ export function Calendar({
           // ISO 요일: 월=1 ... 토=6, 일=7. 토·일 → 주말.
           const isoWeekday = formatInTimeZone(d.date, KST, "i");
           const isWeekend = isoWeekday === "6" || isoWeekday === "7";
-          const holidayNames = publicHolidayNames(d.date);
-          const isHoliday = holidayNames.length > 0;
+          const holidayName = lookupHolidayName(key);
+          const isHoliday = holidayName !== null;
           // 숫자 색: 이번 달이 아니면 옅은 회색 우선, 이번 달이면 주말·공휴일 빨강, 아니면 슬레이트.
           // 같은 빨강 톤(red-500/dark red-400) 으로 통일해 헤더 요일과 시각 일관.
           const dateNumberColor = !d.inMonth
@@ -260,36 +247,35 @@ export function Calendar({
                   : "bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900 ")
               }
             >
-              <div className="mb-0.5 flex justify-end">
-                {/* 오늘이든 일반이든 같은 h-5 w-5 inline-flex 박스로 감싸 시작 위치 정렬.
-                    오늘만 파란 원 + 흰 글씨, 일반은 투명 배경 + 색만 dateNumberColor 로 결정. */}
+              {/* 날짜 숫자 + 공휴일 라벨을 같은 행에 배치. 좌측 라벨(있을 때만), 우측 숫자.
+                  오늘이든 일반이든 같은 h-5 w-5 박스로 감싸 시작 위치 정렬. */}
+              <div className="mb-0.5 flex items-center justify-between gap-1">
+                {isHoliday ? (
+                  <span
+                    className={
+                      "min-w-0 truncate text-[10px] font-medium " +
+                      (d.inMonth
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-red-300 dark:text-red-900")
+                    }
+                    title={holidayName ?? undefined}
+                  >
+                    {holidayName}
+                  </span>
+                ) : (
+                  // justify-between 균형을 위한 빈 자리 — 셀 안의 시각 일관 유지.
+                  <span aria-hidden className="min-w-0" />
+                )}
                 <span
                   aria-label={d.isToday ? "오늘" : undefined}
                   className={
-                    "inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold " +
-                    (d.isToday
-                      ? "bg-blue-500 text-white"
-                      : dateNumberColor)
+                    "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold " +
+                    (d.isToday ? "bg-blue-500 text-white" : dateNumberColor)
                   }
                 >
                   {formatInTimeZone(d.date, KST, "d")}
                 </span>
               </div>
-              {isHoliday && (
-                // 공휴일 라벨 — 이름 한 줄, 빨강. 같은 날 두 공휴일 겹치면 ', ' 로 연결.
-                // truncate 로 셀 폭 넘기지 않게. 이번 달이 아닌 셀에서는 숫자처럼 옅게 처리.
-                <div
-                  className={
-                    "mb-0.5 truncate text-[10px] font-medium " +
-                    (d.inMonth
-                      ? "text-red-600 dark:text-red-400"
-                      : "text-red-300 dark:text-red-900")
-                  }
-                  title={holidayNames.join(", ")}
-                >
-                  {holidayNames.join(", ")}
-                </div>
-              )}
               <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
                 {dayItems.slice(0, 2).map((it) => {
                   const isPast = new Date(it.scheduledStartAt).getTime() <= now.getTime();

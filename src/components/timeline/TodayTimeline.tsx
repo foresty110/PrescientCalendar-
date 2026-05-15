@@ -79,6 +79,12 @@ export function TodayTimeline({
   // 헤더·prefill 메시지에 쓰는 보조 카피("오늘"/"어제"/"내일"/"M월 d일 (요일)") — EmptyState 가 직접 사용.
   const dateLabel = pickDateLabel(effectiveDateKey, todayKey);
 
+  // 날짜를 바꿨을 때 이전 날짜의 카드가 잠깐 보여 "잘못된 것 아닌가" 혼동되는 걸 막기 위해
+  // items 를 즉시 비운다. refreshKey 갱신(같은 날짜 재조회) 에선 stale 카드를 유지해 flicker 회피.
+  useEffect(() => {
+    setItems([]);
+  }, [effectiveDateKey]);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -145,7 +151,17 @@ export function TodayTimeline({
     <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
       <TimelineHeader date={headerDate} count={cards.length} onAddClick={onAddClick} />
       {loading && items.length === 0 ? (
-        <p className="px-2 py-6 text-center text-[12px] text-slate-400">로딩…</p>
+        <div
+          className="flex items-center justify-center gap-2 px-2 py-8 text-[12px] text-slate-500 dark:text-slate-400"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <span
+            aria-hidden
+            className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-violet-500 dark:border-slate-700 dark:border-t-violet-400"
+          />
+          <span>{dateLabel} 일정 불러오는 중…</span>
+        </div>
       ) : error ? (
         <p className="px-2 py-6 text-center text-[12px] text-red-500">{error}</p>
       ) : showEmptyState ? (

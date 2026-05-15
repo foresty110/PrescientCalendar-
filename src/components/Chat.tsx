@@ -7,6 +7,8 @@ import {
   useState,
   useTransition,
 } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import {
   FeasibilityCard,
@@ -216,7 +218,11 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
               <AssistantLabel />
               {(m.content || isPending) && (
                 <div className="rounded-md bg-slate-100 px-3 py-2 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
-                  {m.content || "…"}
+                  {m.content ? (
+                    <AssistantMarkdown content={m.content} />
+                  ) : (
+                    "…"
+                  )}
                 </div>
               )}
               {m.feasibilityCards?.map((card, j) => (
@@ -289,6 +295,94 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
     </div>
   );
 });
+
+/** LLM 응답을 마크다운으로 렌더 — 줄바꿈·**굵게**·리스트·표·인라인 코드 모두 살아남는다.
+ *  Tailwind 로 직접 스타일링해 채팅 말풍선 안에서 어색하지 않게 컴팩트. 외부 링크는 새 탭 + noopener. */
+function AssistantMarkdown({ content }: { content: string }) {
+  return (
+    <div className="text-sm leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => <p className="mb-2">{children}</p>,
+          ul: ({ children }) => (
+            <ul className="mb-2 ml-5 list-disc space-y-0.5">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="mb-2 ml-5 list-decimal space-y-0.5">{children}</ol>
+          ),
+          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+          strong: ({ children }) => (
+            <strong className="font-semibold text-slate-900 dark:text-slate-50">
+              {children}
+            </strong>
+          ),
+          em: ({ children }) => <em className="italic">{children}</em>,
+          code: ({ children, className }) => {
+            const isBlock = className?.startsWith("language-");
+            if (isBlock) {
+              return (
+                <pre className="my-2 overflow-x-auto rounded bg-slate-200 p-2 text-[12px] text-slate-800 dark:bg-slate-700 dark:text-slate-100">
+                  <code>{children}</code>
+                </pre>
+              );
+            }
+            return (
+              <code className="rounded bg-slate-200 px-1 py-0.5 text-[0.92em] text-slate-800 dark:bg-slate-700 dark:text-slate-100">
+                {children}
+              </code>
+            );
+          },
+          h1: ({ children }) => (
+            <h3 className="mb-1 mt-2 text-base font-semibold">{children}</h3>
+          ),
+          h2: ({ children }) => (
+            <h3 className="mb-1 mt-2 text-base font-semibold">{children}</h3>
+          ),
+          h3: ({ children }) => (
+            <h3 className="mb-1 mt-2 text-sm font-semibold">{children}</h3>
+          ),
+          h4: ({ children }) => (
+            <h4 className="mb-1 mt-2 text-sm font-semibold">{children}</h4>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-600 underline hover:text-blue-700 dark:text-blue-400"
+            >
+              {children}
+            </a>
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="my-2 border-l-2 border-slate-300 pl-3 text-slate-600 dark:border-slate-600 dark:text-slate-400">
+              {children}
+            </blockquote>
+          ),
+          hr: () => <hr className="my-2 border-slate-300 dark:border-slate-700" />,
+          table: ({ children }) => (
+            <div className="my-2 overflow-x-auto">
+              <table className="w-full border-collapse text-[13px]">{children}</table>
+            </div>
+          ),
+          th: ({ children }) => (
+            <th className="border border-slate-300 bg-slate-200 px-2 py-1 text-left font-semibold dark:border-slate-600 dark:bg-slate-700">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="border border-slate-300 px-2 py-1 dark:border-slate-600">
+              {children}
+            </td>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
 
 /** 어시스턴트 응답 위에 붙는 작은 프로필 + 이름 라벨. Gemini/ChatGPT 결의 시각 단서로
  *  "이건 내가 친 게 아니라 AI 가 한 말이다" 가 한눈에. */

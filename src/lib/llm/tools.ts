@@ -211,6 +211,9 @@ export const computeFeasibilityTool = defineTool({
       score: result.score,
       rationale: result.rationale,
       dataInsufficient: result.dataInsufficient,
+      // 표본 수 — 클라이언트 UI 에서 신뢰도 (높음/보통/낮음) 라벨로 매핑.
+      // dataInsufficient=true 면 0..(임계 미만), 아니면 ≥5.
+      sampleSize: result.evidence.sampleSize,
     };
   },
 });

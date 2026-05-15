@@ -151,8 +151,9 @@ Anthropic tool_use 정의의 단일 출처. 이 문서가 `src/lib/llm/tools.ts`
 {
   "score": "integer 0..100 | null",
   "rationale": "string",
-  "dataInsufficient": "boolean"
+  "dataInsufficient": "boolean",
+  "sampleSize": "integer ≥ 0"
 }
 ```
 
-`dataInsufficient=true`이면 score=null, UI는 회색 처리. 임계값: 같은 시간대 ±1h ActualRun 5건 미만 또는 가입 2주 이내.
+`dataInsufficient=true`이면 score=null, UI는 회색 처리. 임계값: 같은 시간대 ±1h ActualRun 5건 미만 또는 가입 2주 이내. `sampleSize`는 클라이언트 카드 UI가 신뢰도 라벨(높음 ≥20 / 보통 ≥10 / 낮음 ≥5)로 매핑한다.

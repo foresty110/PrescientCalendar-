@@ -40,7 +40,7 @@
   - [x] 5.3-b 종일 일정 분리 영역 — `duration >= 22h` 휴리스틱 기반 (`docs/decisions/2026-05-15-all-day-events-heuristic.md`)
   - [x] 5.3-c 0건 빈 상태 UX 풀 — 아이콘 + 카피 + "+ 일정 추가" CTA + 예시 prefill 칩 3개 (`EmptyState.tsx`)
   - [x] 5.3-d 풀 키보드 접근성 — ↑/↓/Home/End 로 카드 이동, 채팅 입력란 Esc 로 컨텍스트 해제, 모든 인터랙티브 요소에 focus-visible 링
-  - [ ] 5.3-e LLM 응답의 확률/신뢰도/요인 카드 UI
+  - [x] 5.3-e LLM 응답의 확률/신뢰도/요인 카드 UI — `compute_feasibility` 결과를 채팅 인라인 카드로 (큰 % + 진행 바 + 신뢰도 배지 + rationale). `sampleSize` 추가해 신뢰도 라벨 매핑.
   - [ ] 5.3-f 시스템 프롬프트에 컨텍스트 일정 메타 주입
 
 ## 인프라·포트폴리오

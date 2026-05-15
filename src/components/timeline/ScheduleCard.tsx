@@ -74,12 +74,12 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
         data-timeline-card="true"
         className={
           "group relative w-full rounded-md text-left text-[13px] transition-all " +
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 " +
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950 " +
           (highlighted
-            ? "border border-violet-300 bg-violet-50 px-2 py-2 dark:border-violet-800 dark:bg-violet-950/40"
+            ? "border border-blue-300 bg-blue-50 px-2 py-2 dark:border-blue-800 dark:bg-blue-950/40"
             : "px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-900") +
           (selected
-            ? " ring-2 ring-violet-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-950"
+            ? " ring-2 ring-blue-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-950"
             : "")
         }
       >

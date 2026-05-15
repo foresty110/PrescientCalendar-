@@ -154,17 +154,17 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
   }
 
   return (
-    <div className="flex h-full min-h-[400px] flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+    <div className="flex h-full min-h-[400px] flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
       <header className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
         <span>채팅</span>
         {context && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[11px] font-normal text-violet-700 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200">
+          <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-normal text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
             <span aria-label="대화 중인 일정">{context.time} {context.title}</span>
             <button
               type="button"
               onClick={() => onContextClear?.()}
               aria-label="컨텍스트 해제"
-              className="ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-violet-500 transition-colors hover:bg-violet-200 hover:text-violet-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:text-violet-300 dark:hover:bg-violet-800 dark:hover:text-violet-50 dark:focus-visible:ring-offset-slate-950"
+              className="ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-blue-500 transition-colors hover:bg-blue-200 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:text-blue-300 dark:hover:bg-blue-800 dark:hover:text-blue-50 dark:focus-visible:ring-offset-slate-950"
             >
               ×
             </button>

@@ -8,28 +8,28 @@
  * 사용: Tailwind v4 의 `@theme` 변수는 `bg-brand-primary`, `text-success-text` 처럼
  * 자동으로 클래스화됨. 컴포넌트는 가능한 한 hex 직접 사용 대신 토큰 이름으로 참조. */
 @theme {
-  /* Brand — 메인 보라 (Foresight) */
-  --color-brand-primary: #534ab7;
-  --color-brand-primary-dark: #3c3489;
-  --color-brand-50: #eeedfe;
-  --color-brand-200: #afa9ec;
+  /* Brand — Samsung One UI 블루 톤. 기존 violet 자리에 블루 액센트로 통일. */
+  --color-brand-primary: #1f75ff;
+  --color-brand-primary-dark: #1454c8;
+  --color-brand-50: #eaf3ff;
+  --color-brand-200: #a6c8ff;
 
-  /* 완료 — 초록 */
-  --color-success-base: #97c459;
-  --color-success-bg: #eaf3de;
-  --color-success-text: #3b6d11;
+  /* 완료 — 살짝 부드러운 초록 (sage 톤) */
+  --color-success-base: #34a853;
+  --color-success-bg: #e6f4ea;
+  --color-success-text: #1e7e34;
 
-  /* 지연 / 경고 — 주황 */
-  --color-warn-base: #ef9f27;
-  --color-warn-bg: #faeeda;
-  --color-warn-text: #854f0b;
+  /* 지연 / 경고 — 주황 (살짝 채도 낮춤) */
+  --color-warn-base: #f29900;
+  --color-warn-bg: #fef7e6;
+  --color-warn-text: #8a5500;
 
   /* 미완 / 위험 — 빨강 */
-  --color-error-base: #e24b4a;
-  --color-error-bg: #fcebeb;
-  --color-error-text: #791f1f;
+  --color-error-base: #ea4335;
+  --color-error-bg: #fce8e6;
+  --color-error-text: #b3261e;
 
-  /* 예측 신뢰도 — 녹청 */
+  /* 예측 신뢰도 — 청록 */
   --color-confidence-high: #1d9e75;
   --color-confidence-high-text: #0f6e56;
 }

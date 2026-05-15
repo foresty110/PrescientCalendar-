@@ -48,7 +48,7 @@ export function SeedTestDataBanner({ onSeeded }: SeedTestDataBannerProps) {
   return (
     <aside
       aria-label="테스트 데이터 안내"
-      className="flex items-center gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-[12px] text-violet-900 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-100"
+      className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-[12px] text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100"
     >
       <span aria-hidden className="text-base">
         🧪
@@ -80,7 +80,7 @@ export function SeedTestDataBanner({ onSeeded }: SeedTestDataBannerProps) {
           type="button"
           onClick={handleClick}
           disabled={isPending}
-          className="shrink-0 rounded-md bg-violet-600 px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-violet-50 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-violet-950"
+          className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-50 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-blue-950"
         >
           {isPending ? "생성 중…" : "테스트 데이터 추가"}
         </button>
@@ -89,7 +89,7 @@ export function SeedTestDataBanner({ onSeeded }: SeedTestDataBannerProps) {
         type="button"
         onClick={() => setDismissed(true)}
         aria-label="안내 닫기"
-        className="shrink-0 rounded-full p-1 text-violet-500 transition-colors hover:bg-violet-200 hover:text-violet-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:text-violet-300 dark:hover:bg-violet-800 dark:hover:text-violet-50"
+        className="shrink-0 rounded-full p-1 text-blue-500 transition-colors hover:bg-blue-200 hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-300 dark:hover:bg-blue-800 dark:hover:text-blue-50"
       >
         <span aria-hidden>×</span>
       </button>

@@ -41,7 +41,7 @@ export function EmptyState({ onAddClick, onExampleClick, dateLabel = "오늘" }:
         <button
           type="button"
           onClick={onAddClick}
-          className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-3 py-1.5 text-[12px] font-medium text-violet-700 transition-colors hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200 dark:hover:bg-violet-950 dark:focus-visible:ring-offset-slate-950"
+          className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-[12px] font-medium text-blue-700 transition-colors hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200 dark:hover:bg-blue-950 dark:focus-visible:ring-offset-slate-950"
         >
           <span aria-hidden>+</span>
           <span>일정 추가</span>
@@ -55,7 +55,7 @@ export function EmptyState({ onAddClick, onExampleClick, dateLabel = "오늘" }:
                 <button
                   type="button"
                   onClick={() => onExampleClick(text)}
-                  className="w-full rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-left text-[11px] text-slate-600 transition-colors hover:border-slate-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
+                  className="w-full rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5 text-left text-[11px] text-slate-600 transition-colors hover:border-slate-300 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950"
                 >
                   &ldquo;{text}&rdquo;
                 </button>

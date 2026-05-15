@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { formatInTimeZone, toZonedTime } from "date-fns-tz";
+import { fromZonedTime } from "date-fns-tz";
+
+import { pickDateLabel, todayKstDateKey } from "@/lib/date-labels";
 
 import { EmptyState } from "./EmptyState";
 import { TimelineHeader } from "./TimelineHeader";
@@ -36,6 +38,8 @@ interface TodayTimelineProps {
   onExampleClick?: (text: string) => void;
   /** 현재 채팅 컨텍스트로 선택된 일정 ID — 해당 카드가 시각적으로 강조됨 */
   selectedScheduledRunId?: string | null;
+  /** 보여줄 KST 'yyyy-MM-dd' 날짜. 안 주면 내부에서 오늘로 계산. */
+  selectedDateKey?: string;
 }
 
 export function TodayTimeline({
@@ -44,27 +48,36 @@ export function TodayTimeline({
   onAddClick,
   onExampleClick,
   selectedScheduledRunId = null,
+  selectedDateKey,
 }: TodayTimelineProps) {
   const [items, setItems] = useState<ScheduledRunItem[]>([]);
   const [now, setNow] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 1분마다 현재 시각 갱신 — "지금" 마커 이동
+  // 보여줄 날짜 — props 가 없으면 오늘로 fallback. now state 변화에 따라 자정 넘어가면 자동으로 새 "오늘" 키로 갱신.
+  const todayKey = todayKstDateKey(now);
+  const effectiveDateKey = selectedDateKey ?? todayKey;
+  const isToday = effectiveDateKey === todayKey;
+
+  // 1분마다 현재 시각 갱신 — "지금" 마커 이동. 오늘 보고 있을 때만 의미 있어 그 외엔 멈춤.
   useEffect(() => {
+    if (!isToday) return;
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [isToday]);
 
-  // 오늘 KST 00:00 ~ 24:00 — yyyy-MM-dd 키로 메모이즈해 자정 넘기 전까지 동일 range
-  const dateKey = formatInTimeZone(now, KST, "yyyy-MM-dd");
+  // 선택된 KST 날짜 00:00 ~ 24:00 — yyyy-MM-dd 키만 의존성에 두어 자정 넘기 전까지 동일 range.
   const range = useMemo(
     () => ({
-      fromIso: startOfKstDay(now).toISOString(),
-      toIso: endOfKstDay(now).toISOString(),
+      fromIso: startOfKstDayFromKey(effectiveDateKey).toISOString(),
+      toIso: endOfKstDayFromKey(effectiveDateKey).toISOString(),
     }),
-    [dateKey], // eslint 룰 미정이라 disable 코멘트 없이도 통과
+    [effectiveDateKey],
   );
+
+  // 헤더·prefill 메시지에 쓰는 보조 카피("오늘"/"어제"/"내일"/"M월 d일 (요일)") — EmptyState 가 직접 사용.
+  const dateLabel = pickDateLabel(effectiveDateKey, todayKey);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,15 +138,22 @@ export function TodayTimeline({
 
   const showEmptyState = !loading && !error && cards.length === 0;
 
+  // 헤더 메타 라인이 표시하는 날짜 — 보여주는 KST 날짜를 그대로 (now 가 아니라 effectiveDate 의 자정 UTC).
+  const headerDate = startOfKstDayFromKey(effectiveDateKey);
+
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-      <TimelineHeader date={now} count={cards.length} onAddClick={onAddClick} />
+      <TimelineHeader date={headerDate} count={cards.length} onAddClick={onAddClick} />
       {loading && items.length === 0 ? (
         <p className="px-2 py-6 text-center text-[12px] text-slate-400">로딩…</p>
       ) : error ? (
         <p className="px-2 py-6 text-center text-[12px] text-red-500">{error}</p>
       ) : showEmptyState ? (
-        <EmptyState onAddClick={onAddClick} onExampleClick={onExampleClick} />
+        <EmptyState
+          onAddClick={onAddClick}
+          onExampleClick={onExampleClick}
+          dateLabel={dateLabel}
+        />
       ) : (
         <>
           {allDayCards.length > 0 && (
@@ -165,6 +185,7 @@ export function TodayTimeline({
               now={now}
               onSelect={onSelect}
               selectedScheduledRunId={selectedScheduledRunId}
+              showNowMarker={isToday}
             />
           )}
         </>
@@ -173,15 +194,15 @@ export function TodayTimeline({
   );
 }
 
-function startOfKstDay(d: Date): Date {
-  const z = toZonedTime(d, KST);
-  z.setHours(0, 0, 0, 0);
-  return new Date(formatInTimeZone(z, KST, "yyyy-MM-dd'T'HH:mm:ssXXX"));
+/** 'yyyy-MM-dd' KST 키 → 해당 KST 00:00 의 UTC Date. fromZonedTime 한 줄. */
+function startOfKstDayFromKey(dateKey: string): Date {
+  return fromZonedTime(`${dateKey}T00:00:00`, KST);
 }
 
-function endOfKstDay(d: Date): Date {
-  const z = toZonedTime(d, KST);
-  z.setHours(0, 0, 0, 0);
-  z.setDate(z.getDate() + 1);
-  return new Date(formatInTimeZone(z, KST, "yyyy-MM-dd'T'HH:mm:ssXXX"));
+/** 'yyyy-MM-dd' KST 키 → 다음 날 KST 00:00 (배타적 범위 끝) 의 UTC Date. */
+function endOfKstDayFromKey(dateKey: string): Date {
+  const [y, m, d] = dateKey.split("-").map(Number) as [number, number, number];
+  const nextDay = new Date(Date.UTC(y, m - 1, d + 1));
+  const nextKey = nextDay.toISOString().slice(0, 10);
+  return fromZonedTime(`${nextKey}T00:00:00`, KST);
 }

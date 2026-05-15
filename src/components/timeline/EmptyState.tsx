@@ -9,6 +9,8 @@ interface EmptyStateProps {
   onAddClick?: () => void;
   /** 예시 칩 클릭 시 호출 — text 는 그대로 채팅 입력란에 prefill */
   onExampleClick?: (text: string) => void;
+  /** 빈 상태 헤드라인에 들어갈 자연어 라벨 — "오늘"/"어제"/"내일"/"M월 d일 (요일)". 미지정 시 "오늘". */
+  dateLabel?: string;
 }
 
 /** 자연어 일정 만들기 첫 경험을 도와주는 예시. KST 기준 자연스럽게 읽히는 문장만. */
@@ -18,7 +20,10 @@ const EXAMPLES = [
   "오늘 저녁 8시 책 읽기 30분",
 ];
 
-export function EmptyState({ onAddClick, onExampleClick }: EmptyStateProps) {
+export function EmptyState({ onAddClick, onExampleClick, dateLabel = "오늘" }: EmptyStateProps) {
+  // 한국어 조사("은/는") 가 라벨 마지막 음절에 따라 달라지는 문제를 회피 — 조사 생략해
+  // "{라벨} 일정이 없어요" 로 통일. 오늘/어제/내일/"M월 d일 (요일)" 모두 자연스럽게 읽힌다.
+  const headline = `${dateLabel} 일정이 없어요`;
   return (
     <div className="flex flex-col items-center gap-3 px-2 py-6 text-center">
       <span aria-hidden className="text-3xl">
@@ -26,7 +31,7 @@ export function EmptyState({ onAddClick, onExampleClick }: EmptyStateProps) {
       </span>
       <div className="space-y-0.5">
         <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-          오늘은 일정이 없어요
+          {headline}
         </p>
         <p className="text-[11px] text-slate-500 dark:text-slate-400">
           채팅으로 자연어로 만들어 보세요

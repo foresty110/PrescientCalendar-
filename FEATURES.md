@@ -32,7 +32,7 @@
 - [x] 4.3 "이거 가능할까?" 대화 질의 — `compute_feasibility` 도구 + feasibility.md 프롬프트 결합
 - [x] 4.4 데이터 부족 시 회색 처리 — 표본 < 5건 또는 가입 < 14일이면 score=null, slate-300 점
 
-## 5. 오늘의 일정 타임라인 — 카드 클릭으로 채팅 시작
+## 5. 일정 목록 타임라인 — 카드 클릭으로 채팅 시작
 - [x] 5.1 (Phase 1 MVP) 월 캘린더 아래 오늘의 일정 타임라인 — 시간순 카드, 상태별 노드/배지(완료·스킵·회고 필요·진행중·예정), "지금" 마커, 1분마다 자동 갱신. 카드 클릭 → 우측 채팅 입력란에 "오늘 HH:mm [제목] 일정에 대해 이야기하고 싶어" 자동 채움 + 포커스 (자동 전송 X, 사용자가 직접 보내기)
 - [x] 5.2 (Phase 2) 강조된 다음 일정 카드(violet 배경+보더+"💬 채팅으로 분석 보기" 마이크로카피), 미니 확률 진행 바(28px 바+%, emerald/amber/red 70·40 임계), 채팅 헤더 컨텍스트 칩 + × 해제(시각 단서만 — LLM 컨텍스트 주입은 Phase 3)
 - 5.3 (Phase 3) — 서브항목 단위로 분리해 점진 진행
@@ -42,6 +42,7 @@
   - [x] 5.3-d 풀 키보드 접근성 — ↑/↓/Home/End 로 카드 이동, 채팅 입력란 Esc 로 컨텍스트 해제, 모든 인터랙티브 요소에 focus-visible 링
   - [x] 5.3-e LLM 응답의 확률/신뢰도/요인 카드 UI — `compute_feasibility` 결과를 채팅 인라인 카드로 (큰 % + 진행 바 + 신뢰도 배지 + rationale). `sampleSize` 추가해 신뢰도 라벨 매핑.
   - [x] 5.3-f 시스템 프롬프트에 컨텍스트 일정 메타 주입 — `chatContext` (scheduledRunId/title/time/status) 가 활성이면 채팅 API 요청 본문에 동봉, `buildSystemPrompt` 가 "## 사용자가 현재 보고 있는 일정" 섹션을 시스템 프롬프트 끝에 덧붙임.
+- [x] 5.4 캘린더 날짜 클릭 → 타임라인이 그 날짜로 갱신 — `selectedDateKey` state (AppShell), Calendar 셀 클릭(role=button + Enter/Space) + 선택 셀 violet ring, 일정 chip 은 stopPropagation 으로 회고 모달 동작 유지. 헤더 제목 "오늘의 일정" → "일정 목록" 변경, 메타 라인은 선택 날짜로 적응. EmptyState/prefill 카피는 `pickDateLabel` 로 "오늘"/"어제"/"내일"/"M월 d일 (요일)" 자연어. 다른 날짜 보고 있을 땐 NowMarker 숨김 + 1분 setInterval 정지.
 
 ## 인프라·포트폴리오
 - [x] I.1 GitHub Actions CI (typecheck/lint/test/build) 초록 배지 — README 상단에 `actions/workflows/ci.yml/badge.svg` 추가

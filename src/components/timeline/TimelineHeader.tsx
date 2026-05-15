@@ -17,7 +17,7 @@ export function TimelineHeader({ date, count, onAddClick }: TimelineHeaderProps)
   return (
     <header className="flex items-baseline justify-between gap-2">
       <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-        오늘의 일정
+        일정 목록
         <span className="ml-2 text-[11px] font-normal text-slate-500 dark:text-slate-400">
           {ymd} ({shortWeekday(weekday)}) · {count}건
         </span>

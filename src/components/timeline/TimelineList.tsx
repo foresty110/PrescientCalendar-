@@ -9,6 +9,8 @@ interface TimelineListProps {
   onSelect: (item: ScheduleCardItem) => void;
   /** 채팅 컨텍스트로 활성된 일정 ID — 해당 카드가 violet 강조 + ring 시각 표시 */
   selectedScheduledRunId?: string | null;
+  /** "지금" 마커 표시 여부 — 오늘이 아닌 날짜를 보고 있을 땐 의미가 없어 숨긴다. */
+  showNowMarker?: boolean;
 }
 
 /** 시간순 카드 사이 적절한 위치에 NowMarker 1개 삽입.
@@ -23,6 +25,7 @@ export function TimelineList({
   now,
   onSelect,
   selectedScheduledRunId = null,
+  showNowMarker = true,
 }: TimelineListProps) {
   if (items.length === 0) {
     return (
@@ -60,7 +63,7 @@ export function TimelineList({
           onSelect={onSelect}
         />
       ))}
-      <NowMarker now={now} />
+      {showNowMarker && <NowMarker now={now} />}
       {items.slice(insertAt).map((it) => (
         <ScheduleCard
           key={it.scheduledRunId}

@@ -27,23 +27,46 @@ interface CalendarProps {
   selectedDateKey: string;
   /** 셀 클릭 시 호출 — 부모가 selectedDateKey 갱신 → 타임라인 자동 재조회. */
   onDateSelect: (dateKey: string) => void;
+  /** '오늘' 버튼 클릭 시 호출 — 부모가 selectedDateKey 를 오늘로 리셋 (캘린더 자체는 viewedDate 도 같이 리셋). */
+  onJumpToToday?: () => void;
 }
 
-export function Calendar({ refreshKey = 0, selectedDateKey, onDateSelect }: CalendarProps) {
+export function Calendar({
+  refreshKey = 0,
+  selectedDateKey,
+  onDateSelect,
+  onJumpToToday,
+}: CalendarProps) {
+  // now: 첫 마운트 시 "오늘"의 시각 참조 (isToday 비교·과거 일정 disabled 판정용). 자정 넘기 전까진 안정적.
+  // viewedDate: 화면이 보여주는 달의 어느 한 시점 — ← → 로 이동 / '오늘' 으로 리셋.
   const [now] = useState(() => new Date());
+  const [viewedDate, setViewedDate] = useState(() => new Date());
   const [items, setItems] = useState<ScheduledRunItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [localRefresh, setLocalRefresh] = useState(0);
   const [retroTarget, setRetroTarget] = useState<RetrospectModalTarget | null>(null);
 
-  // ISO 문자열로 메모이즈 — Date 객체 ID 안정화 (무한 refetch 방지)
+  // ISO 문자열로 메모이즈 — Date 객체 ID 안정화 (무한 refetch 방지). viewedDate 가 바뀌면 새 달 fetch.
   const range = useMemo(() => {
     return {
-      fromIso: startOfKstMonth(now).toISOString(),
-      toIso: endOfKstMonth(now).toISOString(),
+      fromIso: startOfKstMonth(viewedDate).toISOString(),
+      toIso: endOfKstMonth(viewedDate).toISOString(),
     };
-  }, [now]);
+  }, [viewedDate]);
+
+  const viewedYm = formatInTimeZone(viewedDate, KST, "yyyy-MM");
+  const todayYm = formatInTimeZone(now, KST, "yyyy-MM");
+  const isCurrentMonth = viewedYm === todayYm;
+
+  function shiftMonth(delta: number) {
+    setViewedDate((prev) => addMonthsInKst(prev, delta));
+  }
+
+  function jumpToToday() {
+    setViewedDate(new Date());
+    onJumpToToday?.();
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +96,7 @@ export function Calendar({ refreshKey = 0, selectedDateKey, onDateSelect }: Cale
     };
   }, [range, refreshKey, localRefresh]);
 
-  const days = monthGrid(now);
+  const days = monthGrid(viewedDate);
 
   // 일별 이벤트 묶기
   const itemsByDay = new Map<string, ScheduledRunItem[]>();
@@ -86,12 +109,45 @@ export function Calendar({ refreshKey = 0, selectedDateKey, onDateSelect }: Cale
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-      <header className="flex items-center justify-between text-sm">
-        <span className="font-semibold text-slate-600 dark:text-slate-300">
-          {formatInTimeZone(now, KST, "yyyy년 M월")}
-        </span>
-        {loading && <span className="text-xs text-slate-400">로딩…</span>}
-        {error && <span className="text-xs text-red-500">{error}</span>}
+      <header className="flex items-center justify-between gap-2 text-sm">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => shiftMonth(-1)}
+            aria-label="이전 달"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            <span aria-hidden>‹</span>
+          </button>
+          <span
+            className="min-w-[6.5rem] text-center font-semibold text-slate-600 dark:text-slate-300"
+            aria-live="polite"
+          >
+            {formatInTimeZone(viewedDate, KST, "yyyy년 M월")}
+          </span>
+          <button
+            type="button"
+            onClick={() => shiftMonth(1)}
+            aria-label="다음 달"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            <span aria-hidden>›</span>
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isCurrentMonth && (
+            <button
+              type="button"
+              onClick={jumpToToday}
+              className="rounded-md border border-slate-300 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              title="이번 달 + 오늘 날짜로 돌아가기"
+            >
+              오늘
+            </button>
+          )}
+          {loading && <span className="text-xs text-slate-400">로딩…</span>}
+          {error && <span className="text-xs text-red-500">{error}</span>}
+        </div>
       </header>
 
       <div className="grid flex-1 grid-cols-7 gap-px overflow-hidden rounded border border-slate-200 bg-slate-200 text-xs dark:border-slate-800 dark:bg-slate-800">
@@ -228,6 +284,14 @@ function feasibilityTooltip(
       ? " · 실현 가능성: 데이터 부족"
       : ` · 실현 가능성 ${it.feasibilityScore}점`;
   return `${time} ${it.title}${status}${score}`;
+}
+
+/** KST 기준으로 delta 개월 이동한 같은 일자의 UTC Date. 일자가 다음 달에 존재하지 않으면(예: 1/31 + 1) JS Date 의
+ *  표준 overflow 동작에 맡긴다 — 어느 일자든 결과의 'yyyy-MM' 가 fetch 범위에 사용되므로 일자 정확성은 무관. */
+function addMonthsInKst(d: Date, delta: number): Date {
+  const z = toZonedTime(d, KST);
+  z.setMonth(z.getMonth() + delta);
+  return new Date(formatInTimeZone(z, KST, "yyyy-MM-dd'T'HH:mm:ssXXX"));
 }
 
 function startOfKstMonth(d: Date): Date {

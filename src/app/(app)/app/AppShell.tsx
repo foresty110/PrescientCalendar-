@@ -66,6 +66,11 @@ export function AppShell() {
     chatRef.current?.prefill(text, "예시에서 시작");
   }
 
+  function handleCalendarJumpToToday() {
+    // Calendar 의 '오늘' 버튼은 보고 있는 달 뿐 아니라 타임라인 선택 날짜까지 오늘로 리셋.
+    setSelectedDateKey(todayKstDateKey(new Date()));
+  }
+
   return (
     <section className="flex flex-1 flex-col gap-4">
       <SeedTestDataBanner onSeeded={() => setRefreshKey((k) => k + 1)} />
@@ -75,6 +80,7 @@ export function AppShell() {
             refreshKey={refreshKey}
             selectedDateKey={selectedDateKey}
             onDateSelect={setSelectedDateKey}
+            onJumpToToday={handleCalendarJumpToToday}
           />
           <TodayTimeline
             refreshKey={refreshKey}

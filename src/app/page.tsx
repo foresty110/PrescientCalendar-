@@ -6,37 +6,47 @@ export default async function LandingPage() {
   const isAuthed = !!session?.user;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col items-start justify-center gap-8 px-6">
-      <div className="space-y-3">
-        <h1 className="text-4xl font-bold sm:text-5xl">Prescient Calendar</h1>
-        <p className="text-lg text-slate-600 dark:text-slate-300">
-          자연어로 일정을 만들고, 회고하고, 다음 주를 예측하는 AI 캘린더.
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50/60 via-white to-white px-6 dark:from-blue-950/20 dark:via-slate-950 dark:to-slate-950">
+      <section className="flex w-full max-w-2xl flex-col items-center text-center">
+        <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl">
+          이번 달에도
+          <br />
+          계획만 세우셨죠?
+        </h1>
+        <p aria-hidden className="mt-3 text-3xl sm:text-4xl">
+          🔥
         </p>
-      </div>
 
-      <ul className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
-        <li>· &quot;내일 3시 운동 1시간&quot; → 일정 자동 생성</li>
-        <li>· &quot;아까 30분 늦게 시작했어&quot; → 회고 자동 기록</li>
-        <li>· 과거 패턴으로 다음 주 일정 예측</li>
-      </ul>
+        <p className="mt-8 text-lg leading-relaxed text-slate-600 dark:text-slate-300 sm:text-xl">
+          매주 화요일 9시 독서,
+          <br />
+          지난달엔{" "}
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            12번 중 3번
+          </span>
+          만 하셨죠.
+          <br />
+          AI 캘린더는 그 패턴까지 다 보고 있어요.
+        </p>
 
-      <div className="flex gap-3">
-        {isAuthed ? (
-          <Link
-            href="/app"
-            className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
-          >
-            대시보드로 →
-          </Link>
-        ) : (
-          <Link
-            href="/signin"
-            className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
-          >
-            Google로 시작하기
-          </Link>
-        )}
-      </div>
+        <div className="mt-10">
+          {isAuthed ? (
+            <Link
+              href="/app"
+              className="inline-flex items-center gap-1 rounded-full bg-blue-500 px-7 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+            >
+              대시보드로 <span aria-hidden>→</span>
+            </Link>
+          ) : (
+            <Link
+              href="/signin"
+              className="inline-flex items-center gap-1 rounded-full bg-blue-500 px-7 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
+            >
+              구글로 1분이면 끝 <span aria-hidden>→</span>
+            </Link>
+          )}
+        </div>
+      </section>
     </main>
   );
 }

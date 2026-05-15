@@ -15,8 +15,6 @@ export interface CreateEventInput {
   recurrence?: Recurrence | null;
   /** 사전 메모 — 일정 카드 시간 범위 옆에 표시. 모든 ScheduledRun 인스턴스 공유. */
   description?: string | null;
-  /** 충돌이 있어도 강제 생성. UI 카드의 '그래도 만들기' 버튼이 이 옵션으로 재호출. */
-  force?: boolean;
 }
 
 export interface ConflictItem {
@@ -74,24 +72,23 @@ export async function createEvent(
     throw new Error("PAST_TIME: 과거 시각은 거부 — assistant가 재질문해야 합니다");
   }
 
-  // force=true 면 충돌 무시 (UI 카드의 '그래도 만들기' 버튼 경로). 기본은 충돌 시 거부.
-  if (!input.force) {
-    const conflicts = await findConflicts(userId, startAt, input.durationMin);
-    if (conflicts.length > 0) {
-      const suggestedAlternatives = await suggestAlternatives(
-        userId,
-        startAt,
-        input.durationMin,
-        now,
-      );
-      return {
-        ok: false,
-        reason: "conflict",
-        conflicts,
-        suggestedAlternatives,
-        originalInput: input,
-      };
-    }
+  // 충돌은 절대 허용 안 한다 — 사용자가 명시: "충돌이 절대 있어선 안 돼". UI 의 '그래도 만들기'
+  // 우회 경로도 같이 제거됐다. 충돌이 있으면 항상 거부 + 대안 후보 반환.
+  const conflicts = await findConflicts(userId, startAt, input.durationMin);
+  if (conflicts.length > 0) {
+    const suggestedAlternatives = await suggestAlternatives(
+      userId,
+      startAt,
+      input.durationMin,
+      now,
+    );
+    return {
+      ok: false,
+      reason: "conflict",
+      conflicts,
+      suggestedAlternatives,
+      originalInput: input,
+    };
   }
 
   const instances = expandRecurrence(startAt, input.recurrence ?? null, {
@@ -146,8 +143,9 @@ export async function createEvent(
 }
 
 /** 충돌이 발생한 baseStart 주변에서 충돌 없는 대안 시각 후보를 최대 4개 반환.
- *  오프셋 후보를 작은 것부터 검사하며, 과거 시각·또 충돌 나는 시각은 자동 제외.
- *  KST 정시 단위로 라벨링해 UI 카드 버튼에 그대로 노출 가능. */
+ *  오프셋 후보를 가까운 것부터 검사. 사용자 일정이 빽빽해 충돌이 많아도 충분한 후보를 보장하기
+ *  위해 풀을 넓게 잡았다(±15·±30·±45·±60·±90·±120·+180·+24h·+48h). 과거 시각·또 충돌 나는
+ *  시각은 자동 제외. */
 async function suggestAlternatives(
   userId: string,
   baseStart: Date,
@@ -155,12 +153,21 @@ async function suggestAlternatives(
   now: Date,
 ): Promise<AlternativeSlot[]> {
   const candidates: { offsetMin: number; label: string }[] = [
+    { offsetMin: 15, label: "15분 뒤" },
+    { offsetMin: -15, label: "15분 앞" },
     { offsetMin: 30, label: "30분 뒤" },
-    { offsetMin: -30, label: "30분 앞당기기" },
+    { offsetMin: -30, label: "30분 앞" },
+    { offsetMin: 45, label: "45분 뒤" },
+    { offsetMin: -45, label: "45분 앞" },
     { offsetMin: 60, label: "1시간 뒤" },
-    { offsetMin: -60, label: "1시간 앞당기기" },
+    { offsetMin: -60, label: "1시간 앞" },
+    { offsetMin: 90, label: "1시간 30분 뒤" },
+    { offsetMin: -90, label: "1시간 30분 앞" },
     { offsetMin: 120, label: "2시간 뒤" },
+    { offsetMin: -120, label: "2시간 앞" },
+    { offsetMin: 180, label: "3시간 뒤" },
     { offsetMin: 24 * 60, label: "내일 같은 시각" },
+    { offsetMin: 2 * 24 * 60, label: "모레 같은 시각" },
   ];
 
   const out: AlternativeSlot[] = [];

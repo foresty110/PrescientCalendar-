@@ -2,6 +2,7 @@
 
 import {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -111,6 +112,15 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+
+  // 새 메시지가 추가되거나 응답 대기 상태가 바뀔 때 스크롤을 맨 아래로 — 사용자가 방금 보낸 메시지가
+  // 시야 밖으로 잘려 "안 보내진 것처럼" 보이는 인지 오류를 막는다.
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, isPending]);
 
   useImperativeHandle(
     ref,
@@ -184,11 +194,6 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
     });
   }
 
-  function handleFormSubmit(form: FormData) {
-    const raw = form.get("text");
-    send(typeof raw === "string" ? raw : "");
-  }
-
   /** 충돌 카드에서 대안 시각 버튼 클릭 → 자연어 채팅 메시지로 즉시 전송.
    *  LLM 이 create_event 를 새 시각·동일 제목으로 다시 호출하게 한다. */
   function pickConflictAlternative(
@@ -199,14 +204,11 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
     send(`${newTime} 로 ${original.title} ${original.durationMin}분 잡아줘`);
   }
 
-  /** 충돌 카드의 '그래도 만들기' 버튼 → force=true 의도가 분명한 자연어로 전송.
-   *  LLM 이 같은 인자에 force=true 를 더해 재호출한다. */
-  function forceConflictCreate(original: ConflictAlternativesData["originalInput"]) {
-    const t = formatInTimeZone(new Date(original.startAt), KST, "M월 d일 HH:mm");
-    send(`충돌이어도 좋아. ${t} 그대로 ${original.title} ${original.durationMin}분 강제로 만들어줘 (force).`);
-  }
-
-  const showQuickActions = messages.length === 0 && !isPending;
+  // 빈 상태뿐 아니라 한 턴 대화가 마무리된 시점(마지막 메시지가 assistant) 에도 다시 노출 —
+  // 직전 주제 흐름이 끝나면 사용자가 다음 의도(만들기/논의/회고) 를 빠르게 선택할 수 있게.
+  const lastMessage = messages[messages.length - 1];
+  const showQuickActions =
+    !isPending && (messages.length === 0 || lastMessage?.role === "assistant");
 
   return (
     <div className="flex h-full min-h-[400px] flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
@@ -233,7 +235,7 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
         )}
       </header>
 
-      <ol className="flex-1 space-y-3 overflow-y-auto text-sm">
+      <ol ref={listRef} className="flex-1 space-y-3 overflow-y-auto text-sm">
         {messages.length === 0 && !isPending && (
           <li className="rounded-md bg-slate-50 p-3 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
             안녕하세요. 일정을 자연어로 만들고 회고할 수 있게 도와드릴게요.
@@ -255,7 +257,9 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
           ) : (
             <li key={i} className="mr-8 space-y-1.5">
               <AssistantLabel />
-              {(m.content || isPending) && (
+              {/* 충돌 카드가 있으면 카드가 정보 + 안내를 모두 담고 있어 LLM 텍스트는 중복이 됨 — 카드만 노출.
+                  feasibility 카드 등은 텍스트와 보완 관계라 함께 노출. */}
+              {!m.conflictCards?.length && (m.content || isPending) && (
                 <div className="rounded-md bg-slate-100 px-3 py-2 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
                   {m.content ? (
                     <AssistantMarkdown content={m.content} />
@@ -272,7 +276,6 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
                   key={`conflict-${j}`}
                   data={card}
                   onPickAlternative={pickConflictAlternative}
-                  onForceCreate={forceConflictCreate}
                 />
               ))}
             </li>
@@ -311,11 +314,19 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
         </div>
       )}
 
-      <form action={handleFormSubmit} className="flex gap-2">
+      {/* form action 대신 onSubmit 사용 — React 19 form action 은 호출 함수를 자동으로 transition 으로 감싸
+          setMessages/setInput 같은 urgent 업데이트가 지연돼 "보낸 메시지가 화면에 안 떠 보이는" 인지 문제를
+          유발한다. onSubmit 에서 직접 send 를 호출하면 사용자 메시지 추가·입력란 비우기가 즉시 반영된다. */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(input);
+        }}
+        className="flex gap-2"
+      >
         <input
           ref={inputRef}
           type="text"
-          name="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -326,7 +337,7 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
               onContextClear?.();
             }
           }}
-          placeholder="일정을 입력해보세요…"
+          placeholder="일정을 직접 만들거나 상의해보세요.."
           disabled={isPending}
           className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
           autoComplete="off"

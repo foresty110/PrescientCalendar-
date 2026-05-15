@@ -1,9 +1,10 @@
 "use client";
 
 import { z } from "zod";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
 const KST = "Asia/Seoul";
+const KO_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"] as const;
 
 /** `create_event` 도구가 충돌 시 반환하는 결과 형태. AssistantMarkdown 본문과 별개로
  *  채팅 인라인 카드(ConflictAlternativesCard) 로 자동 렌더된다.
@@ -24,39 +25,35 @@ export const conflictAlternativesSchema = z.object({
       label: z.string(),
     }),
   ),
-  originalInput: z.object({
-    title: z.string(),
-    startAt: z.string(),
-    durationMin: z.number(),
-    description: z.string().nullable().optional(),
-  }).passthrough(),
+  originalInput: z
+    .object({
+      title: z.string(),
+      startAt: z.string(),
+      durationMin: z.number(),
+      description: z.string().nullable().optional(),
+    })
+    .passthrough(),
 });
 
 export type ConflictAlternativesData = z.infer<typeof conflictAlternativesSchema>;
 
 interface ConflictAlternativesCardProps {
   data: ConflictAlternativesData;
-  /** 대안 시각 버튼 클릭 시 호출 — 부모(Chat) 가 자동 채팅 메시지로 변환해 즉시 전송. */
-  onPickAlternative: (alternative: { startAt: string; label: string }, originalInput: ConflictAlternativesData["originalInput"]) => void;
-  /** '그래도 만들기' 버튼 — 같은 시각·같은 제목으로 force=true 재호출 트리거. */
-  onForceCreate: (originalInput: ConflictAlternativesData["originalInput"]) => void;
+  /** 대안 시각 버튼 클릭 시 호출 — 부모(Chat) 가 자연어 메시지로 변환해 즉시 전송. */
+  onPickAlternative: (
+    alternative: { startAt: string; label: string },
+    originalInput: ConflictAlternativesData["originalInput"],
+  ) => void;
 }
 
 export function ConflictAlternativesCard({
   data,
   onPickAlternative,
-  onForceCreate,
 }: ConflictAlternativesCardProps) {
-  const originalTime = formatInTimeZone(
-    new Date(data.originalInput.startAt),
-    KST,
-    "M월 d일 (eee) HH:mm",
-  );
-
   return (
     <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-[12px] dark:border-amber-900/50 dark:bg-amber-950/30">
       <div className="mb-2 font-medium text-amber-900 dark:text-amber-100">
-        같은 시간에 다른 일정이 있어서 못 잡았어요
+        같은 시간에 다른 일정이 있어요
       </div>
       <ul className="mb-3 space-y-0.5 text-amber-800 dark:text-amber-200">
         {data.conflicts.map((c) => (
@@ -67,10 +64,10 @@ export function ConflictAlternativesCard({
         ))}
       </ul>
 
-      {data.suggestedAlternatives.length > 0 && (
+      {data.suggestedAlternatives.length > 0 ? (
         <>
           <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-amber-700 dark:text-amber-300">
-            다른 시간으로 잡기
+            다른 시각으로 잡기
           </div>
           <div className="flex flex-wrap gap-1.5">
             {data.suggestedAlternatives.map((alt) => (
@@ -78,28 +75,38 @@ export function ConflictAlternativesCard({
                 key={alt.startAt}
                 type="button"
                 onClick={() => onPickAlternative(alt, data.originalInput)}
-                className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-700 dark:hover:bg-blue-950/40 dark:hover:text-blue-200"
+                className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-700 dark:hover:bg-blue-950/40 dark:hover:text-blue-200"
+                title={koDateTimeLabel(new Date(alt.startAt))}
               >
                 <span className="block">{alt.label}</span>
                 <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">
-                  {formatInTimeZone(new Date(alt.startAt), KST, "HH:mm")}
+                  {koDateTimeShort(new Date(alt.startAt))}
                 </span>
               </button>
             ))}
           </div>
         </>
+      ) : (
+        <p className="text-[11px] text-amber-700 dark:text-amber-300">
+          가까운 시간대에 충돌 없는 슬롯을 찾지 못했어요. 직접 다른 시각을 입력해 주세요.
+        </p>
       )}
-
-      <div className="mt-3 border-t border-amber-200 pt-2 dark:border-amber-900/60">
-        <button
-          type="button"
-          onClick={() => onForceCreate(data.originalInput)}
-          className="text-[11px] font-medium text-amber-800 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 dark:text-amber-200"
-          title={`${originalTime} 그대로 두 일정 모두 두기`}
-        >
-          그래도 {originalTime} 로 만들기
-        </button>
-      </div>
     </div>
   );
+}
+
+/** KST 기준 "M월 d일 (요일) HH:mm" 한글 표기. date-fns-tz 의 EEEE 가 영문이라
+ *  별도 KO_WEEKDAYS 매핑 사용. */
+function koDateTimeLabel(d: Date): string {
+  const month = formatInTimeZone(d, KST, "M");
+  const day = formatInTimeZone(d, KST, "d");
+  const hhmm = formatInTimeZone(d, KST, "HH:mm");
+  const dow = toZonedTime(d, KST).getDay();
+  // eslint-disable-next-line security/detect-object-injection -- dow 는 getDay 결과 0..6
+  return `${month}월 ${day}일 (${KO_WEEKDAYS[dow]}) ${hhmm}`;
+}
+
+/** 버튼 부 라벨용 짧은 표기 — "HH:mm" 만. 같은 날 안에서 옵션끼리 시각 차이만 보면 충분. */
+function koDateTimeShort(d: Date): string {
+  return formatInTimeZone(d, KST, "HH:mm");
 }

@@ -69,8 +69,8 @@ export const createEventTool = defineTool({
   description:
     "사용자가 새 일정을 만들 때 호출. 과거 시각은 거부. " +
     "충돌이 있으면 일정은 생성되지 않고 ok=false 결과 + 대안 시각 후보를 반환한다. " +
-    "클라이언트가 자동으로 대안 선택 카드를 렌더하므로 assistant 는 한 줄로 알리기만 한다. " +
-    "사용자가 '그래도 만들어줘' 라고 명시적으로 요청한 경우에만 force=true 로 재호출.",
+    "클라이언트가 자동으로 대안 선택 카드를 렌더하므로 assistant 는 추가 텍스트 없이 카드만 보여줘도 된다 (또는 한 마디만). " +
+    "충돌 우회 옵션은 없다 — 사용자가 '그래도 만들어줘' 라고 해도 다시 호출하지 말고 다른 시각을 고르도록 안내.",
   inputSchema: z.object({
     title: z.string().min(1).max(100),
     description: z
@@ -82,12 +82,6 @@ export const createEventTool = defineTool({
     startAt: isoDateTime.describe("ISO-8601, KST offset 권장 (예: 2026-05-13T15:00:00+09:00)"),
     durationMin: z.number().int().min(5).max(480),
     recurrence: recurrenceSchema,
-    force: z
-      .boolean()
-      .optional()
-      .describe(
-        "true 면 충돌 무시하고 강제 생성. UI '그래도 만들기' 버튼 또는 사용자 명시 요청 시에만",
-      ),
   }),
   handler: async (input, ctx) => {
     return events.createEvent(ctx.userId, input, ctx.now);

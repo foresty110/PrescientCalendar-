@@ -271,7 +271,6 @@ export function Calendar({
                         }
                         title={feasibilityTooltip(it, isPast, hasRetro)}
                       >
-                        <FeasibilityBadge score={it.feasibilityScore} />
                         <span className="truncate">
                           {formatInTimeZone(new Date(it.scheduledStartAt), KST, "HH:mm")} {it.title}
                         </span>
@@ -297,30 +296,6 @@ export function Calendar({
         onSaved={() => setLocalRefresh((k) => k + 1)}
       />
     </div>
-  );
-}
-
-function FeasibilityBadge({ score }: { score: number | null }) {
-  // null → 데이터 부족 회색. 점수에 따라 red→amber→green 그라데이션.
-  if (score === null) {
-    return (
-      <span
-        className="inline-block h-2 w-2 shrink-0 rounded-full bg-slate-300 dark:bg-slate-600"
-        aria-label="실현 가능성 — 데이터 부족"
-      />
-    );
-  }
-  const color =
-    score >= 70
-      ? "bg-emerald-500"
-      : score >= 50
-        ? "bg-amber-500"
-        : "bg-red-500";
-  return (
-    <span
-      className={`inline-block h-2 w-2 shrink-0 rounded-full ${color}`}
-      aria-label={`실현 가능성 ${score}점`}
-    />
   );
 }
 

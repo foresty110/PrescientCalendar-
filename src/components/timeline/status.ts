@@ -40,3 +40,11 @@ export function deriveStatus(
   if (now.getTime() < end.getTime()) return "in_progress";
   return "needs_retro";
 }
+
+/** 하루의 91.7% 이상(22시간 = 1320분)을 차지하는 일정은 "종일"로 분리. 스키마에 종일 플래그가
+ *  없어 휴리스틱으로 판정 — 9-to-5(8h) 워크샵 같은 긴-시간형 일정은 시간형 그대로 남는다. */
+export const ALL_DAY_THRESHOLD_MIN = 22 * 60;
+
+export function isAllDayDuration(durationMin: number): boolean {
+  return durationMin >= ALL_DAY_THRESHOLD_MIN;
+}

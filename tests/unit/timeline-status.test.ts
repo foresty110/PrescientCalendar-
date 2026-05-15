@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { deriveStatus } from "@/components/timeline/status";
+import {
+  ALL_DAY_THRESHOLD_MIN,
+  deriveStatus,
+  isAllDayDuration,
+} from "@/components/timeline/status";
 
 const baseRun = {
   scheduledStartAt: "2026-05-14T05:00:00.000Z", // 14:00 KST
@@ -57,5 +61,23 @@ describe("deriveStatus", () => {
     expect(deriveStatus(baseRun, undefined, new Date(endMs))).toBe(
       "needs_retro",
     );
+  });
+});
+
+describe("isAllDayDuration", () => {
+  it("임계 미만(1319분 = 21시간 59분)은 종일 아님 — 긴-시간형 일정도 시간형으로 남는다", () => {
+    expect(isAllDayDuration(ALL_DAY_THRESHOLD_MIN - 1)).toBe(false);
+  });
+
+  it("정확히 임계(22시간)면 종일", () => {
+    expect(isAllDayDuration(ALL_DAY_THRESHOLD_MIN)).toBe(true);
+  });
+
+  it("24시간은 종일", () => {
+    expect(isAllDayDuration(24 * 60)).toBe(true);
+  });
+
+  it("9-to-5 워크샵(8시간)은 시간형 — 자정 시작이 아니라도 분리되면 안 됨", () => {
+    expect(isAllDayDuration(8 * 60)).toBe(false);
   });
 });

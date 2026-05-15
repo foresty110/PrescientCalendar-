@@ -16,6 +16,9 @@ export interface ScheduleCardItem {
   scheduledDurationMin: number;
   status: TimelineStatus;
   feasibilityScore: number | null;
+  /** 종일 일정 — `isAllDayDuration` 로 판정. true 면 카드가 시간 라인 대신 "종일" 라벨로 렌더되고,
+   *  TodayTimeline 이 별도 "종일" 섹션으로 분리해 보낸다. */
+  isAllDay: boolean;
 }
 
 interface ScheduleCardProps {
@@ -36,15 +39,26 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
 
   // upcoming / in_progress 카드만 확률 바 노출 (이미 지나간 일정에 미래 예측은 의미 없음)
   const showProbability = item.status === "upcoming" || item.status === "in_progress";
+  const timeLabel = item.isAllDay ? "종일" : `${time} – ${endTime}`;
+  const ariaWhen = item.isAllDay ? "종일" : time;
 
   return (
     <li className="grid grid-cols-[32px_16px_1fr] items-start gap-2">
-      <time
-        dateTime={item.scheduledStartAt}
-        className="pt-1.5 text-right text-[11px] tabular-nums text-slate-500 dark:text-slate-400"
-      >
-        {time}
-      </time>
+      {item.isAllDay ? (
+        <span
+          aria-hidden
+          className="pt-1.5 text-right text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500"
+        >
+          종일
+        </span>
+      ) : (
+        <time
+          dateTime={item.scheduledStartAt}
+          className="pt-1.5 text-right text-[11px] tabular-nums text-slate-500 dark:text-slate-400"
+        >
+          {time}
+        </time>
+      )}
 
       <span className="relative flex justify-center pt-2">
         <span className={`block h-2.5 w-2.5 rounded-full ${NODE_CLASS[item.status]}`} />
@@ -54,7 +68,7 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
         type="button"
         onClick={() => onSelect(item)}
         aria-pressed={selected}
-        aria-label={`${time} ${item.title} (${ariaStatus}) 일정에 대해 채팅 시작`}
+        aria-label={`${ariaWhen} ${item.title} (${ariaStatus}) 일정에 대해 채팅 시작`}
         className={
           "group relative w-full rounded-md text-left text-[13px] transition-all " +
           (highlighted
@@ -89,7 +103,7 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
               : "text-slate-500 dark:text-slate-400")
           }
         >
-          {time} – {endTime}
+          {timeLabel}
         </div>
         {item.description && (
           <div

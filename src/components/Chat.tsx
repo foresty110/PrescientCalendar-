@@ -40,14 +40,16 @@ function extractFeasibilityCards(toolCalls: ToolCallSummary[]): FeasibilityCardD
     .map((r) => r.data);
 }
 
-/** 채팅 헤더 컨텍스트 칩에 표시되는 일정 컨텍스트.
- *  Phase 2 에선 시각 단서 + 타임라인 선택 상태 동기화에만 사용.
- *  LLM 호출 시 시스템 프롬프트 주입은 Phase 3 로 미룸. */
+/** 채팅 헤더 컨텍스트 칩에 표시되면서 동시에 LLM 시스템 프롬프트에 메타로 주입되는 일정 컨텍스트.
+ *  요청 본문의 `chatContext` 필드로 그대로 직렬화돼 서버로 전달된다 — `src/app/api/chat/route.ts`
+ *  와 `src/lib/llm/prompts.ts:ChatContextInput` 와 동일한 모양을 유지해야 한다. */
 export interface ChatContext {
   scheduledRunId: string;
   title: string;
   /** 헤더 칩에 그대로 노출되는 시각 표기 — "HH:mm" KST 또는 종일 일정이면 "종일". */
   time: string;
+  /** 카드의 derived TimelineStatus — LLM 이 회고/예측 모드 진입을 자연스럽게 결정하는 데 사용. */
+  status: "completed" | "missed" | "needs_retro" | "in_progress" | "upcoming";
 }
 
 interface ChatProps {
@@ -119,7 +121,11 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ messages: next }),
+          // context 가 활성화된 상태면 같이 보내 LLM 이 "이거/그거" 같은 지시어를 해석할 수 있게.
+          body: JSON.stringify({
+            messages: next,
+            ...(context ? { chatContext: context } : {}),
+          }),
         });
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as

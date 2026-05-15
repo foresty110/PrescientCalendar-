@@ -45,6 +45,7 @@ export function AppShell() {
       scheduledRunId: item.scheduledRunId,
       title: item.title,
       time: when,
+      status: item.status,
     });
   }
 

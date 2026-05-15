@@ -5,8 +5,8 @@ import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
 import { TimelineHeader } from "./TimelineHeader";
 import { TimelineList } from "./TimelineList";
-import { deriveStatus } from "./status";
-import type { ScheduleCardItem } from "./ScheduleCard";
+import { deriveStatus, isAllDayDuration } from "./status";
+import { ScheduleCard, type ScheduleCardItem } from "./ScheduleCard";
 
 const KST = "Asia/Seoul";
 
@@ -103,6 +103,7 @@ export function TodayTimeline({
     scheduledStartAt: it.scheduledStartAt,
     scheduledDurationMin: it.scheduledDurationMin,
     feasibilityScore: it.feasibilityScore,
+    isAllDay: isAllDayDuration(it.scheduledDurationMin),
     status: deriveStatus(
       {
         scheduledStartAt: it.scheduledStartAt,
@@ -113,6 +114,13 @@ export function TodayTimeline({
     ),
   }));
 
+  // 종일 / 시간형 분리 — 종일은 NowMarker 흐름에서 빠지고 별도 섹션으로 묶인다.
+  // 시작 시각 정렬은 상위에서 이미 끝났으므로 partition 만.
+  const allDayCards = cards.filter((c) => c.isAllDay);
+  const timedCards = cards.filter((c) => !c.isAllDay);
+
+  const showEmptyState = !loading && !error && cards.length === 0;
+
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
       <TimelineHeader date={now} count={cards.length} onAddClick={onAddClick} />
@@ -120,13 +128,44 @@ export function TodayTimeline({
         <p className="px-2 py-6 text-center text-[12px] text-slate-400">로딩…</p>
       ) : error ? (
         <p className="px-2 py-6 text-center text-[12px] text-red-500">{error}</p>
+      ) : showEmptyState ? (
+        <p className="px-2 py-6 text-center text-[12px] text-slate-500 dark:text-slate-400">
+          오늘은 일정이 없어요.
+        </p>
       ) : (
-        <TimelineList
-          items={cards}
-          now={now}
-          onSelect={onSelect}
-          selectedScheduledRunId={selectedScheduledRunId}
-        />
+        <>
+          {allDayCards.length > 0 && (
+            <section
+              aria-labelledby="all-day-heading"
+              className="border-b border-slate-100 pb-2 dark:border-slate-900"
+            >
+              <h3
+                id="all-day-heading"
+                className="mb-1 px-2 text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
+              >
+                종일
+              </h3>
+              <ol className="space-y-1">
+                {allDayCards.map((it) => (
+                  <ScheduleCard
+                    key={it.scheduledRunId}
+                    item={it}
+                    selected={it.scheduledRunId === selectedScheduledRunId}
+                    onSelect={onSelect}
+                  />
+                ))}
+              </ol>
+            </section>
+          )}
+          {timedCards.length > 0 && (
+            <TimelineList
+              items={timedCards}
+              now={now}
+              onSelect={onSelect}
+              selectedScheduledRunId={selectedScheduledRunId}
+            />
+          )}
+        </>
       )}
     </div>
   );

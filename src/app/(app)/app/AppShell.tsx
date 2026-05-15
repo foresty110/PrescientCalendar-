@@ -11,16 +11,21 @@ import type { TimelineStatus } from "@/components/timeline/status";
 
 const KST = "Asia/Seoul";
 
-function buildPrefill(status: TimelineStatus, time: string, title: string): string {
+function buildPrefill(
+  status: TimelineStatus,
+  when: string,
+  title: string,
+): string {
+  // when 은 "HH:mm" 또는 종일 카드일 경우 "종일" — 어느 쪽이든 자연어로 그대로 흘려보낸다.
   switch (status) {
     case "needs_retro":
-      return `오늘 ${time} ${title} 어땠어? 회고할게`;
+      return `오늘 ${when} ${title} 어땠어? 회고할게`;
     case "completed":
     case "missed":
-      return `오늘 ${time} ${title} 회고 기록 정리해줘`;
+      return `오늘 ${when} ${title} 회고 기록 정리해줘`;
     case "in_progress":
     case "upcoming":
-      return `오늘 ${time} ${title} 일정에 대해 이야기하고 싶어`;
+      return `오늘 ${when} ${title} 일정에 대해 이야기하고 싶어`;
   }
 }
 
@@ -31,14 +36,15 @@ export function AppShell() {
 
   function handleTimelineCardSelect(item: ScheduleCardItem) {
     const time = formatInTimeZone(new Date(item.scheduledStartAt), KST, "HH:mm");
+    const when = item.isAllDay ? "종일" : time;
     chatRef.current?.prefill(
-      buildPrefill(item.status, time, item.title),
+      buildPrefill(item.status, when, item.title),
       "일정 카드에서 시작됨",
     );
     setChatContext({
       scheduledRunId: item.scheduledRunId,
       title: item.title,
-      time,
+      time: when,
     });
   }
 

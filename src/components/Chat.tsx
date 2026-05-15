@@ -22,7 +22,8 @@ interface ChatMessage {
 export interface ChatContext {
   scheduledRunId: string;
   title: string;
-  time: string; // "HH:mm" KST
+  /** 헤더 칩에 그대로 노출되는 시각 표기 — "HH:mm" KST 또는 종일 일정이면 "종일". */
+  time: string;
 }
 
 interface ChatProps {

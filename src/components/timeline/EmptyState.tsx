@@ -29,14 +29,9 @@ export function EmptyState({ onAddClick, onExampleClick, dateLabel = "오늘" }:
       <span aria-hidden className="text-3xl">
         📅
       </span>
-      <div className="space-y-0.5">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-          {headline}
-        </p>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-          채팅으로 자연어로 만들어 보세요
-        </p>
-      </div>
+      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        {headline}
+      </p>
       {onAddClick && (
         <button
           type="button"

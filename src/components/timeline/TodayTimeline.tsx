@@ -148,7 +148,7 @@ export function TodayTimeline({
   const headerDate = startOfKstDayFromKey(effectiveDateKey);
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
+    <div className="flex max-h-[480px] flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
       <TimelineHeader date={headerDate} count={cards.length} onAddClick={onAddClick} />
       {loading && items.length === 0 ? (
         <div
@@ -171,7 +171,9 @@ export function TodayTimeline({
           dateLabel={dateLabel}
         />
       ) : (
-        <>
+        // 카드가 많아져 박스를 밀어내지 않도록 — 헤더 아래 영역만 flex-1 + overflow-y-auto 로 스크롤.
+        // 외곽 max-h-[480px] 와 합쳐 페이지 전체가 늘어나지 않게 한다.
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
           {allDayCards.length > 0 && (
             <section
               aria-labelledby="all-day-heading"
@@ -204,7 +206,7 @@ export function TodayTimeline({
               showNowMarker={isToday}
             />
           )}
-        </>
+        </div>
       )}
     </div>
   );

@@ -212,9 +212,12 @@ export const computeFeasibilityTool = defineTool({
       score: result.score,
       rationale: result.rationale,
       dataInsufficient: result.dataInsufficient,
-      // 표본 수 — 클라이언트 UI 에서 신뢰도 (높음/보통/낮음) 라벨로 매핑.
-      // dataInsufficient=true 면 0..(임계 미만), 아니면 ≥5.
-      sampleSize: result.evidence.sampleSize,
+      sampleSize: result.sampleSize,
+      // v2 확장: 5단계 신뢰도, 영향 요인 breakdown, 점수 올리는 대안 시나리오.
+      // 클라이언트 FeasibilityCard 가 이 필드들로 분할 그래프 + "왜 N%인가요?" + 대안을 렌더한다.
+      confidence: result.confidence,
+      factors: result.factors,
+      alternatives: result.alternatives,
     };
   },
 });

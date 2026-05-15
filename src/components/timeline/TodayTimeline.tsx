@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
+import { EmptyState } from "./EmptyState";
 import { TimelineHeader } from "./TimelineHeader";
 import { TimelineList } from "./TimelineList";
 import { deriveStatus, isAllDayDuration } from "./status";
@@ -29,8 +30,10 @@ interface TodayTimelineProps {
   refreshKey?: number;
   /** 카드 클릭 시 채팅 입력란에 자동 채울 문장을 부모로 위임 */
   onSelect: (item: ScheduleCardItem) => void;
-  /** 헤더 "+ 추가" 버튼 클릭 시 부모가 채팅 입력란 포커스 */
+  /** 헤더 "+ 추가" 버튼 / 빈 상태 "+ 일정 추가" 클릭 시 부모가 채팅 입력란 포커스 */
   onAddClick?: () => void;
+  /** 빈 상태 예시 칩 클릭 시 — 그 문장이 채팅 입력란에 prefill 된다 */
+  onExampleClick?: (text: string) => void;
   /** 현재 채팅 컨텍스트로 선택된 일정 ID — 해당 카드가 시각적으로 강조됨 */
   selectedScheduledRunId?: string | null;
 }
@@ -39,6 +42,7 @@ export function TodayTimeline({
   refreshKey = 0,
   onSelect,
   onAddClick,
+  onExampleClick,
   selectedScheduledRunId = null,
 }: TodayTimelineProps) {
   const [items, setItems] = useState<ScheduledRunItem[]>([]);
@@ -129,9 +133,7 @@ export function TodayTimeline({
       ) : error ? (
         <p className="px-2 py-6 text-center text-[12px] text-red-500">{error}</p>
       ) : showEmptyState ? (
-        <p className="px-2 py-6 text-center text-[12px] text-slate-500 dark:text-slate-400">
-          오늘은 일정이 없어요.
-        </p>
+        <EmptyState onAddClick={onAddClick} onExampleClick={onExampleClick} />
       ) : (
         <>
           {allDayCards.length > 0 && (

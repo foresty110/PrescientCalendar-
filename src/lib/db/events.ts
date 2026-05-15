@@ -15,14 +15,41 @@ export interface CreateEventInput {
   recurrence?: Recurrence | null;
   /** 사전 메모 — 일정 카드 시간 범위 옆에 표시. 모든 ScheduledRun 인스턴스 공유. */
   description?: string | null;
+  /** 충돌이 있어도 강제 생성. UI 카드의 '그래도 만들기' 버튼이 이 옵션으로 재호출. */
+  force?: boolean;
 }
 
-export interface CreateEventResult {
-  eventId: string;
-  firstScheduledRunId: string;
-  occurrencesPlanned: number;
-  conflictWarning?: { scheduledRunId: string; title: string; startAt: Date }[];
+export interface ConflictItem {
+  scheduledRunId: string;
+  title: string;
+  startAt: Date;
 }
+
+export interface AlternativeSlot {
+  /** 제안 시각 (ISO 문자열) — 다음 create_event 재호출에 그대로 사용 */
+  startAt: string;
+  /** 사용자에게 보일 자연어 라벨 — "30분 뒤" / "내일 같은 시각" */
+  label: string;
+}
+
+/** create_event 의 두 갈래 결과. 도구 호출에서 OK/실패를 ok 플래그로 구분 — LLM 이 ok=false 면
+ *  사용자에게 대안 카드 UI 가 자동 렌더되도록 안내만 한다 (긴 텍스트 X). 클라이언트는 ok=false
+ *  결과를 ConflictAlternativesCard 로 인라인 렌더. */
+export type CreateEventResult =
+  | {
+      ok: true;
+      eventId: string;
+      firstScheduledRunId: string;
+      occurrencesPlanned: number;
+    }
+  | {
+      ok: false;
+      reason: "conflict";
+      conflicts: ConflictItem[];
+      suggestedAlternatives: AlternativeSlot[];
+      /** 사용자가 '그래도 만들기' 누르면 LLM 이 이 입력에 force=true 를 더해 재호출 */
+      originalInput: CreateEventInput;
+    };
 
 /** 반복 인스턴스를 한 번에 펼칠 horizon (주). 추후 사용자 설정 가능하게 보강 가능 */
 const RECURRENCE_HORIZON_WEEKS = 4;
@@ -47,7 +74,25 @@ export async function createEvent(
     throw new Error("PAST_TIME: 과거 시각은 거부 — assistant가 재질문해야 합니다");
   }
 
-  const conflict = await findConflicts(userId, startAt, input.durationMin);
+  // force=true 면 충돌 무시 (UI 카드의 '그래도 만들기' 버튼 경로). 기본은 충돌 시 거부.
+  if (!input.force) {
+    const conflicts = await findConflicts(userId, startAt, input.durationMin);
+    if (conflicts.length > 0) {
+      const suggestedAlternatives = await suggestAlternatives(
+        userId,
+        startAt,
+        input.durationMin,
+        now,
+      );
+      return {
+        ok: false,
+        reason: "conflict",
+        conflicts,
+        suggestedAlternatives,
+        originalInput: input,
+      };
+    }
+  }
 
   const instances = expandRecurrence(startAt, input.recurrence ?? null, {
     now,
@@ -93,11 +138,42 @@ export async function createEvent(
   }
 
   return {
+    ok: true,
     eventId: result.event.id,
     firstScheduledRunId: result.firstScheduledRun.id,
     occurrencesPlanned: instances.length,
-    ...(conflict.length > 0 ? { conflictWarning: conflict } : {}),
   };
+}
+
+/** 충돌이 발생한 baseStart 주변에서 충돌 없는 대안 시각 후보를 최대 4개 반환.
+ *  오프셋 후보를 작은 것부터 검사하며, 과거 시각·또 충돌 나는 시각은 자동 제외.
+ *  KST 정시 단위로 라벨링해 UI 카드 버튼에 그대로 노출 가능. */
+async function suggestAlternatives(
+  userId: string,
+  baseStart: Date,
+  durationMin: number,
+  now: Date,
+): Promise<AlternativeSlot[]> {
+  const candidates: { offsetMin: number; label: string }[] = [
+    { offsetMin: 30, label: "30분 뒤" },
+    { offsetMin: -30, label: "30분 앞당기기" },
+    { offsetMin: 60, label: "1시간 뒤" },
+    { offsetMin: -60, label: "1시간 앞당기기" },
+    { offsetMin: 120, label: "2시간 뒤" },
+    { offsetMin: 24 * 60, label: "내일 같은 시각" },
+  ];
+
+  const out: AlternativeSlot[] = [];
+  for (const c of candidates) {
+    if (out.length >= 4) break;
+    const candidate = new Date(baseStart.getTime() + c.offsetMin * 60_000);
+    if (candidate.getTime() < now.getTime()) continue; // 과거 시각 후보 제외
+    const conflicts = await findConflicts(userId, candidate, durationMin);
+    if (conflicts.length === 0) {
+      out.push({ startAt: candidate.toISOString(), label: c.label });
+    }
+  }
+  return out;
 }
 
 export interface ScheduledRunListItem {

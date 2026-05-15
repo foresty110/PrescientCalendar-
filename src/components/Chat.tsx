@@ -10,11 +10,20 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { formatInTimeZone } from "date-fns-tz";
+
+import {
+  ConflictAlternativesCard,
+  conflictAlternativesSchema,
+  type ConflictAlternativesData,
+} from "@/components/ConflictAlternativesCard";
 import {
   FeasibilityCard,
   feasibilityOutputSchema,
   type FeasibilityCardData,
 } from "@/components/FeasibilityCard";
+
+const KST = "Asia/Seoul";
 
 interface ToolCallSummary {
   name: string;
@@ -29,6 +38,8 @@ interface ChatMessage {
   meta?: string;
   /** assistant 메시지에 한해 — compute_feasibility tool 호출 결과를 카드로 본문 아래 인라인 표시. */
   feasibilityCards?: FeasibilityCardData[];
+  /** assistant 메시지에 한해 — create_event 가 충돌로 거부됐을 때 대안 카드 데이터. */
+  conflictCards?: ConflictAlternativesData[];
 }
 
 /** assistant 응답에서 compute_feasibility 결과만 추려 Zod 로 형태 검증.
@@ -39,6 +50,15 @@ function extractFeasibilityCards(toolCalls: ToolCallSummary[]): FeasibilityCardD
     .filter((c) => c.name === "compute_feasibility")
     .map((c) => feasibilityOutputSchema.safeParse(c.output))
     .filter((r): r is { success: true; data: FeasibilityCardData } => r.success)
+    .map((r) => r.data);
+}
+
+/** create_event 호출 결과 중 ok=false(충돌 거부) 인 것만 추려 충돌 카드 데이터로 변환. */
+function extractConflictCards(toolCalls: ToolCallSummary[]): ConflictAlternativesData[] {
+  return toolCalls
+    .filter((c) => c.name === "create_event")
+    .map((c) => conflictAlternativesSchema.safeParse(c.output))
+    .filter((r): r is { success: true; data: ConflictAlternativesData } => r.success)
     .map((r) => r.data);
 }
 
@@ -147,12 +167,14 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
           toolCalls: ToolCallSummary[];
         };
         const feasibilityCards = extractFeasibilityCards(data.toolCalls);
+        const conflictCards = extractConflictCards(data.toolCalls);
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
             content: data.text,
             ...(feasibilityCards.length > 0 ? { feasibilityCards } : {}),
+            ...(conflictCards.length > 0 ? { conflictCards } : {}),
           },
         ]);
         if (data.toolCalls.length > 0) onCompletion?.(data.toolCalls);
@@ -165,6 +187,23 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
   function handleFormSubmit(form: FormData) {
     const raw = form.get("text");
     send(typeof raw === "string" ? raw : "");
+  }
+
+  /** 충돌 카드에서 대안 시각 버튼 클릭 → 자연어 채팅 메시지로 즉시 전송.
+   *  LLM 이 create_event 를 새 시각·동일 제목으로 다시 호출하게 한다. */
+  function pickConflictAlternative(
+    alt: { startAt: string; label: string },
+    original: ConflictAlternativesData["originalInput"],
+  ) {
+    const newTime = formatInTimeZone(new Date(alt.startAt), KST, "M월 d일 HH:mm");
+    send(`${newTime} 로 ${original.title} ${original.durationMin}분 잡아줘`);
+  }
+
+  /** 충돌 카드의 '그래도 만들기' 버튼 → force=true 의도가 분명한 자연어로 전송.
+   *  LLM 이 같은 인자에 force=true 를 더해 재호출한다. */
+  function forceConflictCreate(original: ConflictAlternativesData["originalInput"]) {
+    const t = formatInTimeZone(new Date(original.startAt), KST, "M월 d일 HH:mm");
+    send(`충돌이어도 좋아. ${t} 그대로 ${original.title} ${original.durationMin}분 강제로 만들어줘 (force).`);
   }
 
   const showQuickActions = messages.length === 0 && !isPending;
@@ -227,6 +266,14 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
               )}
               {m.feasibilityCards?.map((card, j) => (
                 <FeasibilityCard key={j} data={card} />
+              ))}
+              {m.conflictCards?.map((card, j) => (
+                <ConflictAlternativesCard
+                  key={`conflict-${j}`}
+                  data={card}
+                  onPickAlternative={pickConflictAlternative}
+                  onForceCreate={forceConflictCreate}
+                />
               ))}
             </li>
           ),

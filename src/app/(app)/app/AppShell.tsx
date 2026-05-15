@@ -9,6 +9,7 @@ import { SeedTestDataBanner } from "@/components/SeedTestDataBanner";
 import { TodayTimeline } from "@/components/timeline/TodayTimeline";
 import type { ScheduleCardItem } from "@/components/timeline/ScheduleCard";
 import type { TimelineStatus } from "@/components/timeline/status";
+import { pickDateLabel, todayKstDateKey } from "@/lib/date-labels";
 
 const KST = "Asia/Seoul";
 
@@ -16,30 +17,36 @@ function buildPrefill(
   status: TimelineStatus,
   when: string,
   title: string,
+  dateLabel: string,
 ): string {
-  // when 은 "HH:mm" 또는 종일 카드일 경우 "종일" — 어느 쪽이든 자연어로 그대로 흘려보낸다.
+  // when 은 "HH:mm" 또는 종일 카드일 경우 "종일". dateLabel 은 "오늘"/"어제"/"내일"/"M월 d일 (요일)".
+  // 둘 다 자연어로 그대로 흘려보낸다.
   switch (status) {
     case "needs_retro":
-      return `오늘 ${when} ${title} 어땠어? 회고할게`;
+      return `${dateLabel} ${when} ${title} 어땠어? 회고할게`;
     case "completed":
     case "missed":
-      return `오늘 ${when} ${title} 회고 기록 정리해줘`;
+      return `${dateLabel} ${when} ${title} 회고 기록 정리해줘`;
     case "in_progress":
     case "upcoming":
-      return `오늘 ${when} ${title} 일정에 대해 이야기하고 싶어`;
+      return `${dateLabel} ${when} ${title} 일정에 대해 이야기하고 싶어`;
   }
 }
 
 export function AppShell() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [chatContext, setChatContext] = useState<ChatContext | null>(null);
+  // 캘린더에서 클릭한 날짜 — KST 'yyyy-MM-dd'. 초기는 오늘. 첫 마운트 시 한 번만 계산해
+  // 자정 넘기 전까지 동일 값을 유지. (자정 넘으면 새로고침 시 새 오늘로 재계산)
+  const [selectedDateKey, setSelectedDateKey] = useState(() => todayKstDateKey(new Date()));
   const chatRef = useRef<ChatHandle>(null);
 
   function handleTimelineCardSelect(item: ScheduleCardItem) {
     const time = formatInTimeZone(new Date(item.scheduledStartAt), KST, "HH:mm");
     const when = item.isAllDay ? "종일" : time;
+    const dateLabel = pickDateLabel(selectedDateKey, todayKstDateKey(new Date()));
     chatRef.current?.prefill(
-      buildPrefill(item.status, when, item.title),
+      buildPrefill(item.status, when, item.title, dateLabel),
       "일정 카드에서 시작됨",
     );
     setChatContext({
@@ -64,13 +71,18 @@ export function AppShell() {
       <SeedTestDataBanner onSeeded={() => setRefreshKey((k) => k + 1)} />
       <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_520px]">
         <div className="flex flex-col gap-4">
-          <Calendar refreshKey={refreshKey} />
+          <Calendar
+            refreshKey={refreshKey}
+            selectedDateKey={selectedDateKey}
+            onDateSelect={setSelectedDateKey}
+          />
           <TodayTimeline
             refreshKey={refreshKey}
             onSelect={handleTimelineCardSelect}
             onAddClick={handleTimelineAddClick}
             onExampleClick={handleEmptyStateExample}
             selectedScheduledRunId={chatContext?.scheduledRunId ?? null}
+            selectedDateKey={selectedDateKey}
           />
         </div>
         <Chat

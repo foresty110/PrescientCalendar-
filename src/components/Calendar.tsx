@@ -23,9 +23,13 @@ interface ScheduledRunItem {
 interface CalendarProps {
   /** 외부에서 부모가 새로고침 트리거를 변경할 때마다 다시 fetch */
   refreshKey?: number;
+  /** 현재 타임라인이 보고 있는 KST 'yyyy-MM-dd' 날짜. 해당 셀에 violet ring 으로 표시 (오늘 셀은 기존 slate ring 유지). */
+  selectedDateKey: string;
+  /** 셀 클릭 시 호출 — 부모가 selectedDateKey 갱신 → 타임라인 자동 재조회. */
+  onDateSelect: (dateKey: string) => void;
 }
 
-export function Calendar({ refreshKey = 0 }: CalendarProps) {
+export function Calendar({ refreshKey = 0, selectedDateKey, onDateSelect }: CalendarProps) {
   const [now] = useState(() => new Date());
   const [items, setItems] = useState<ScheduledRunItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,13 +106,32 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
         {days.map((d) => {
           const key = formatInTimeZone(d.date, KST, "yyyy-MM-dd");
           const dayItems = itemsByDay.get(key) ?? [];
+          const isSelected = key === selectedDateKey;
+          const dateAriaLabel = `${formatInTimeZone(d.date, KST, "M월 d일")} 선택`;
           return (
+            // 셀은 <button> 대신 role="button" div — 안에 일정 chip <button> 이 들어가야 해서
+            // 중첩 interactive content 금지 규칙을 피한다. Enter/Space 키도 명시적으로 처리.
             <div
               key={key}
+              role="button"
+              tabIndex={0}
+              onClick={() => onDateSelect(key)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onDateSelect(key);
+                }
+              }}
+              aria-pressed={isSelected}
+              aria-label={dateAriaLabel}
               className={
-                "min-h-[56px] bg-white px-1.5 py-1 dark:bg-slate-950 " +
+                "min-h-[56px] cursor-pointer bg-white px-1.5 py-1 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-400 dark:bg-slate-950 dark:hover:bg-slate-900 " +
                 (d.inMonth ? "" : "text-slate-300 dark:text-slate-700") +
-                (d.isToday ? " ring-2 ring-inset ring-slate-900 dark:ring-slate-100" : "")
+                (d.isToday
+                  ? " ring-2 ring-inset ring-slate-900 dark:ring-slate-100"
+                  : isSelected
+                    ? " ring-2 ring-inset ring-violet-500"
+                    : "")
               }
             >
               <div className="mb-1 text-right">{formatInTimeZone(d.date, KST, "d")}</div>
@@ -120,15 +143,17 @@ export function Calendar({ refreshKey = 0 }: CalendarProps) {
                     <li key={it.scheduledRunId}>
                       <button
                         type="button"
-                        onClick={() =>
+                        onClick={(e) => {
+                          // 셀 onClick (날짜 선택) 까지 버블링되지 않게 — chip 클릭은 회고 모달만.
+                          e.stopPropagation();
                           setRetroTarget({
                             scheduledRunId: it.scheduledRunId,
                             title: it.title,
                             scheduledStartAt: it.scheduledStartAt,
                             scheduledDurationMin: it.scheduledDurationMin,
                             ...(it.actualRun ? { existing: it.actualRun } : {}),
-                          })
-                        }
+                          });
+                        }}
                         disabled={!isPast}
                         className={
                           "flex w-full items-center gap-1 truncate rounded px-1.5 py-0.5 text-left text-[10px] " +

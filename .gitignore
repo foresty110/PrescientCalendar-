@@ -9,6 +9,11 @@ node_modules/
 out/
 dist/
 build/
+# next-env.d.ts 는 next dev / next build 가 매번 덮어쓰는 자동 생성 파일.
+# Next.js 공식이 "should not be edited" 라고 명시하고 create-next-app 기본 템플릿도 ignore.
+# dev 와 build 가 서로 다른 generated types 경로(.next/dev/types vs .next/types)를
+# 가리키도록 한 줄을 토글하므로, 추적하면 PR diff 노이즈가 계속 생긴다.
+next-env.d.ts
 
 # 환경 변수
 .env

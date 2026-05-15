@@ -36,12 +36,6 @@ export default async function LandingPage() {
             Google로 시작하기
           </Link>
         )}
-        <a
-          href="/api/docs"
-          className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
-        >
-          API 문서
-        </a>
       </div>
     </main>
   );

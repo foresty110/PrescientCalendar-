@@ -7,8 +7,22 @@ import { Calendar } from "@/components/Calendar";
 import { Chat, type ChatContext, type ChatHandle } from "@/components/Chat";
 import { TodayTimeline } from "@/components/timeline/TodayTimeline";
 import type { ScheduleCardItem } from "@/components/timeline/ScheduleCard";
+import type { TimelineStatus } from "@/components/timeline/status";
 
 const KST = "Asia/Seoul";
+
+function buildPrefill(status: TimelineStatus, time: string, title: string): string {
+  switch (status) {
+    case "needs_retro":
+      return `오늘 ${time} ${title} 어땠어? 회고할게`;
+    case "completed":
+    case "missed":
+      return `오늘 ${time} ${title} 회고 기록 정리해줘`;
+    case "in_progress":
+    case "upcoming":
+      return `오늘 ${time} ${title} 일정에 대해 이야기하고 싶어`;
+  }
+}
 
 export function AppShell() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -18,7 +32,7 @@ export function AppShell() {
   function handleTimelineCardSelect(item: ScheduleCardItem) {
     const time = formatInTimeZone(new Date(item.scheduledStartAt), KST, "HH:mm");
     chatRef.current?.prefill(
-      `오늘 ${time} ${item.title} 일정에 대해 이야기하고 싶어`,
+      buildPrefill(item.status, time, item.title),
       "일정 카드에서 시작됨",
     );
     setChatContext({

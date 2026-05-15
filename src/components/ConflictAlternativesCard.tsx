@@ -22,6 +22,7 @@ export const conflictAlternativesSchema = z.object({
   suggestedAlternatives: z.array(
     z.object({
       startAt: z.string(),
+      durationMin: z.number().int().min(5),
       label: z.string(),
     }),
   ),
@@ -41,7 +42,7 @@ interface ConflictAlternativesCardProps {
   data: ConflictAlternativesData;
   /** 대안 시각 버튼 클릭 시 호출 — 부모(Chat) 가 자연어 메시지로 변환해 즉시 전송. */
   onPickAlternative: (
-    alternative: { startAt: string; label: string },
+    alternative: { startAt: string; durationMin: number; label: string },
     originalInput: ConflictAlternativesData["originalInput"],
   ) => void;
 }
@@ -69,18 +70,18 @@ export function ConflictAlternativesCard({
           <div className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-amber-700 dark:text-amber-300">
             다른 시각으로 잡기
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-col gap-1.5">
             {data.suggestedAlternatives.map((alt) => (
               <button
                 key={alt.startAt}
                 type="button"
                 onClick={() => onPickAlternative(alt, data.originalInput)}
-                className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-700 dark:hover:bg-blue-950/40 dark:hover:text-blue-200"
+                className="flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-[12px] font-medium text-slate-700 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-700 dark:hover:bg-blue-950/40 dark:hover:text-blue-200"
                 title={koDateTimeLabel(new Date(alt.startAt))}
               >
-                <span className="block">{alt.label}</span>
-                <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">
-                  {koDateTimeShort(new Date(alt.startAt))}
+                <span className="flex-1 truncate">{alt.label}</span>
+                <span className="shrink-0 text-[11px] font-normal text-slate-500 dark:text-slate-400">
+                  {koDateTimeShort(new Date(alt.startAt))} · {alt.durationMin}분
                 </span>
               </button>
             ))}
@@ -88,7 +89,7 @@ export function ConflictAlternativesCard({
         </>
       ) : (
         <p className="text-[11px] text-amber-700 dark:text-amber-300">
-          가까운 시간대에 충돌 없는 슬롯을 찾지 못했어요. 직접 다른 시각을 입력해 주세요.
+          가까운 시간대에 가용 슬롯을 찾지 못했어요. 직접 다른 시각을 입력해 주세요.
         </p>
       )}
     </div>

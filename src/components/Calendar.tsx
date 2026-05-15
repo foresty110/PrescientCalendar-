@@ -217,7 +217,7 @@ export function Calendar({
               aria-pressed={isSelected}
               aria-label={dateAriaLabel}
               className={
-                "min-h-[44px] cursor-pointer px-1 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 " +
+                "flex h-[64px] cursor-pointer flex-col overflow-hidden px-1 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 " +
                 (d.inMonth
                   ? "text-slate-700 dark:text-slate-200 "
                   : "text-slate-300 dark:text-slate-700 ") +
@@ -240,7 +240,7 @@ export function Calendar({
                   </span>
                 )}
               </div>
-              <ul className="space-y-0.5">
+              <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
                 {dayItems.slice(0, 2).map((it) => {
                   const isPast = new Date(it.scheduledStartAt).getTime() <= now.getTime();
                   const hasRetro = !!it.actualRun;
@@ -370,8 +370,10 @@ function monthGrid(d: Date): { date: Date; inMonth: boolean; isToday: boolean }[
   const today = formatInTimeZone(new Date(), KST, "yyyy-MM-dd");
   const monthStr = formatInTimeZone(d, KST, "yyyy-MM");
 
+  // 5주(35칸) 만 표시 — 6주가 필요한 달(예: 1일이 금/토에 시작하고 31일이 있는 달) 은 마지막 며칠이
+  // 잘려 보인다. 의도된 트레이드오프 — 화면 높이를 일정하게 유지해 일정 목록·채팅이 한 화면에 들어오게.
   const days: { date: Date; inMonth: boolean; isToday: boolean }[] = [];
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < 35; i++) {
     const cur = new Date(gridStart);
     cur.setDate(gridStart.getDate() + i);
     const inMonth = formatInTimeZone(cur, KST, "yyyy-MM") === monthStr;

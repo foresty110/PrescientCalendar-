@@ -273,7 +273,7 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
               onContextClear?.();
             }
           }}
-          placeholder="일정을 자연어로 입력하세요…"
+          placeholder="일정을 입력해보세요…"
           disabled={isPending}
           className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
           autoComplete="off"

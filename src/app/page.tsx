@@ -18,15 +18,17 @@ export default async function LandingPage() {
         </p>
 
         <p className="mt-8 text-lg leading-relaxed text-slate-600 dark:text-slate-300 sm:text-xl">
-          매주 화요일 9시 독서,
-          <br />
-          지난달엔{" "}
+          계획은 늘었는데,{" "}
           <span className="font-semibold text-slate-900 dark:text-slate-100">
-            12번 중 3번
+            지킨 건 적죠.
           </span>
-          만 하셨죠.
           <br />
-          AI 캘린더는 그 패턴까지 다 보고 있어요.
+          <br />
+          내가 진짜 뭐를 할 수 있는지,{" "}
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            AI 가 패턴까지 읽어
+          </span>{" "}
+          알려줘요.
         </p>
 
         <div className="mt-10">
@@ -35,7 +37,7 @@ export default async function LandingPage() {
               href="/app"
               className="inline-flex items-center gap-1 rounded-full bg-blue-500 px-7 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-950"
             >
-              대시보드로 <span aria-hidden>→</span>
+              내 캘린더로 <span aria-hidden>→</span>
             </Link>
           ) : (
             <Link

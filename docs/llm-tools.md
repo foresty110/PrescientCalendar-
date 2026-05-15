@@ -160,14 +160,34 @@ Anthropic tool_use 정의의 단일 출처. 이 문서가 `src/lib/llm/tools.ts`
 
 **입력**: `{ "scheduledRunId": "string" }`
 
-**출력**:
+**출력** (v2):
 ```json
 {
   "score": "integer 0..100 | null",
   "rationale": "string",
   "dataInsufficient": "boolean",
-  "sampleSize": "integer ≥ 0"
+  "sampleSize": "integer ≥ 0",
+  "confidence": "매우높음 | 높음 | 보통 | 낮음 | 없음",
+  "factors": [
+    {
+      "key": "executionRate | delay | density | event | streak | length",
+      "label": "string",
+      "detail": "string",
+      "delta": "integer (signed)"
+    }
+  ],
+  "alternatives": [
+    {
+      "label": "string (예: '1시간 앞당기기')",
+      "expectedScore": "integer 0..100",
+      "note": "string"
+    }
+  ]
 }
 ```
 
-`dataInsufficient=true`이면 score=null, UI는 회색 처리. 임계값: 같은 시간대 ±1h ActualRun 5건 미만 또는 가입 2주 이내. `sampleSize`는 클라이언트 카드 UI가 신뢰도 라벨(높음 ≥20 / 보통 ≥10 / 낮음 ≥5)로 매핑한다.
+`dataInsufficient=true`면 score=null, UI는 회색 처리. cold-start 임계값: 같은 시간대 ±1h ActualRun 5건 미만 또는 가입 2주 이내. 
+
+- `confidence`: 5단계 (매우높음 ≥30 / 높음 ≥20 / 보통 ≥10 / 낮음 ≥5 / 없음 <5) — sampleSize 기반.
+- `factors`: 점수 산출에 영향을 준 항목별 기여도. 클라이언트가 "왜 N%인가요?" 섹션으로 표시.
+- `alternatives`: 같은 공식을 후보 시각·길이에 다시 적용해 도출한 개선 시나리오. 클라이언트가 "어떻게 올릴 수 있을까요?" 섹션으로 표시.

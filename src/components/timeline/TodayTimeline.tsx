@@ -148,7 +148,7 @@ export function TodayTimeline({
   const headerDate = startOfKstDayFromKey(effectiveDateKey);
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
       <TimelineHeader date={headerDate} count={cards.length} onAddClick={onAddClick} />
       {loading && items.length === 0 ? (
         <div
@@ -158,7 +158,7 @@ export function TodayTimeline({
         >
           <span
             aria-hidden
-            className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-violet-500 dark:border-slate-700 dark:border-t-violet-400"
+            className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500 dark:border-slate-700 dark:border-t-blue-400"
           />
           <span>{dateLabel} 일정 불러오는 중…</span>
         </div>

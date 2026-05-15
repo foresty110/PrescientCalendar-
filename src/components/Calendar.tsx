@@ -114,14 +114,14 @@ export function Calendar({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm dark:border-slate-800/70 dark:bg-slate-950">
       <header className="flex items-center justify-between gap-2 text-sm">
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => shiftMonth(-1)}
             aria-label="이전 달"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <span aria-hidden>‹</span>
           </button>
@@ -135,7 +135,7 @@ export function Calendar({
             type="button"
             onClick={() => shiftMonth(1)}
             aria-label="다음 달"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             <span aria-hidden>›</span>
           </button>
@@ -143,7 +143,7 @@ export function Calendar({
             <button
               type="button"
               onClick={jumpToToday}
-              className="ml-1 rounded-md border border-slate-300 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              className="ml-1 rounded-md border border-slate-300 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               title="이번 달 + 오늘 날짜로 돌아가기"
             >
               오늘
@@ -171,22 +171,22 @@ export function Calendar({
 
       {loading && items.length === 0 ? (
         <div
-          className="flex flex-1 items-center justify-center gap-2 rounded border border-slate-200 bg-white py-16 text-[12px] text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200/70 bg-white py-16 text-[12px] text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
           aria-live="polite"
           aria-busy="true"
         >
           <span
             aria-hidden
-            className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-violet-500 dark:border-slate-700 dark:border-t-violet-400"
+            className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500 dark:border-slate-700 dark:border-t-blue-400"
           />
           <span>{formatInTimeZone(viewedDate, KST, "yyyy년 M월")} 불러오는 중…</span>
         </div>
       ) : error ? (
-        <div className="flex flex-1 items-center justify-center rounded border border-red-200 bg-red-50 py-16 text-[12px] text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+        <div className="flex flex-1 items-center justify-center rounded-xl border border-red-200 bg-red-50 py-16 text-[12px] text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
           ⚠ {error}
         </div>
       ) : (
-      <div className="grid flex-1 grid-cols-7 gap-px overflow-hidden rounded border border-slate-200 bg-slate-200 text-xs dark:border-slate-800 dark:bg-slate-800">
+      <div className="grid flex-1 grid-cols-7 gap-px overflow-hidden rounded-xl border border-slate-200/70 bg-slate-200/70 text-xs dark:border-slate-800 dark:bg-slate-800">
         {["월", "화", "수", "목", "금", "토", "일"].map((d) => (
           <div
             key={d}
@@ -217,16 +217,25 @@ export function Calendar({
               aria-pressed={isSelected}
               aria-label={dateAriaLabel}
               className={
-                "min-h-[56px] cursor-pointer bg-white px-1.5 py-1 text-left transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-400 dark:bg-slate-950 dark:hover:bg-slate-900 " +
-                (d.inMonth ? "" : "text-slate-300 dark:text-slate-700") +
-                (d.isToday
-                  ? " ring-2 ring-inset ring-slate-900 dark:ring-slate-100"
-                  : isSelected
-                    ? " ring-2 ring-inset ring-violet-500"
-                    : "")
+                "min-h-[56px] cursor-pointer px-1.5 py-1 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400 " +
+                (d.inMonth ? "" : "text-slate-300 dark:text-slate-700 ") +
+                (isSelected
+                  ? "bg-blue-50 dark:bg-blue-950/40 "
+                  : "bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900 ")
               }
             >
-              <div className="mb-1 text-right">{formatInTimeZone(d.date, KST, "d")}</div>
+              <div className="mb-1 flex justify-end">
+                {d.isToday ? (
+                  <span
+                    aria-label="오늘"
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[11px] font-medium text-white"
+                  >
+                    {formatInTimeZone(d.date, KST, "d")}
+                  </span>
+                ) : (
+                  <span>{formatInTimeZone(d.date, KST, "d")}</span>
+                )}
+              </div>
               <ul className="space-y-0.5">
                 {dayItems.slice(0, 2).map((it) => {
                   const isPast = new Date(it.scheduledStartAt).getTime() <= now.getTime();

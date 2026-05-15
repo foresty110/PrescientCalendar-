@@ -297,7 +297,9 @@ export function Calendar({
                         }}
                         disabled={!isPast}
                         className={
-                          "flex w-full items-center gap-1 truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium " +
+                          // 한 셀 안에 일정이 빽빽해 보이지 않게 두께·글자·라인높이를 모두 살짝 줄인다.
+                          // py-px(1px) + leading-tight(1.25) + text-[10px] 조합으로 칩 한 줄 높이 ~13px.
+                          "flex w-full items-center gap-1 truncate rounded px-1 py-px text-left text-[10px] font-medium leading-tight " +
                           (hasRetro
                             ? "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100"
                             : isPast

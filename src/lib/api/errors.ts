@@ -38,10 +38,6 @@ export function mapError(e: unknown) {
   if (e instanceof UnauthorizedError) return apiError("UNAUTHORIZED", "로그인이 필요합니다");
   if (e instanceof ForbiddenError) return apiError("FORBIDDEN", "권한이 없습니다");
 
-  if (e instanceof Error && e.message.startsWith("PAST_TIME:")) {
-    return apiError("VALIDATION_ERROR", e.message);
-  }
-
   console.error("[api] unhandled error:", e);
   return apiError("INTERNAL", "내부 오류가 발생했습니다");
 }

@@ -45,11 +45,16 @@ interface ConflictAlternativesCardProps {
     alternative: { startAt: string; durationMin: number; label: string },
     originalInput: ConflictAlternativesData["originalInput"],
   ) => void;
+  /** 카드 이후 새 대화 turn 이 발생했거나 응답 대기 중일 때 true — 버튼 클릭 차단 + 옅은 톤.
+   *  대안 클릭은 새 채팅 turn 을 시작하는 행위라, 이미 다른 주제로 넘어간 시점에 누르면
+   *  대화 맥락이 어긋난다 (사용자 보고: "이전 대안 버튼이 늦게 클릭돼서 새 충돌 카드 발생"). */
+  disabled?: boolean;
 }
 
 export function ConflictAlternativesCard({
   data,
   onPickAlternative,
+  disabled = false,
 }: ConflictAlternativesCardProps) {
   return (
     <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-[12px] dark:border-amber-900/50 dark:bg-amber-950/30">
@@ -76,8 +81,18 @@ export function ConflictAlternativesCard({
                 key={alt.startAt}
                 type="button"
                 onClick={() => onPickAlternative(alt, data.originalInput)}
-                className="flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-[12px] font-medium text-slate-700 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-700 dark:hover:bg-blue-950/40 dark:hover:text-blue-200"
-                title={koDateTimeLabel(new Date(alt.startAt))}
+                disabled={disabled}
+                className={
+                  "flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-[12px] font-medium text-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 " +
+                  (disabled
+                    ? "cursor-not-allowed opacity-60"
+                    : "hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 dark:hover:border-blue-700 dark:hover:bg-blue-950/40 dark:hover:text-blue-200")
+                }
+                title={
+                  disabled
+                    ? "이미 다음 대화로 넘어간 대안 — 새 일정으로 다시 요청해 주세요"
+                    : koDateTimeLabel(new Date(alt.startAt))
+                }
               >
                 <span className="flex-1 truncate">{alt.label}</span>
                 <span className="shrink-0 text-[11px] font-normal text-slate-500 dark:text-slate-400">

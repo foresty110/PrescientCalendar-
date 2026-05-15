@@ -99,24 +99,28 @@ export function ScheduleCard({ item, highlighted, selected, onSelect }: Schedule
             )}
           </div>
         </div>
-        <div
-          className={
-            "mt-0.5 text-[11px] tabular-nums " +
-            (highlighted
-              ? "text-[color:var(--color-brand-primary)]"
-              : "text-slate-500 dark:text-slate-400")
-          }
-        >
-          {timeLabel}
-        </div>
-        {item.description && (
-          <div
-            className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-400"
-            title={item.description}
+        {/* 시간 라벨과 메모(description) 를 같은 행으로 — 카드 세로가 짧아지고 좌측 시간, 우측 메모로
+            한눈에 "언제 + 그날 메모" 가 같이 읽힌다. 메모는 셀 폭을 넘기지 않도록 truncate. */}
+        <div className="mt-0.5 flex min-w-0 items-baseline gap-2 text-[11px]">
+          <span
+            className={
+              "shrink-0 tabular-nums " +
+              (highlighted
+                ? "text-[color:var(--color-brand-primary)]"
+                : "text-slate-500 dark:text-slate-400")
+            }
           >
-            {item.description}
-          </div>
-        )}
+            {timeLabel}
+          </span>
+          {item.description && (
+            <span
+              className="min-w-0 truncate text-slate-500 dark:text-slate-400"
+              title={item.description}
+            >
+              {item.description}
+            </span>
+          )}
+        </div>
         {highlighted && (
           <div className="mt-1 text-[10px] font-medium text-[color:var(--color-brand-primary)]">
             💬 채팅으로 분석 보기 →

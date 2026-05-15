@@ -70,9 +70,8 @@ export async function createEvent(
 ): Promise<CreateEventResult> {
   const startAt = fromKstInput(input.startAt);
 
-  if (startAt.getTime() < now.getTime()) {
-    throw new Error("PAST_TIME: 과거 시각은 거부 — assistant가 재질문해야 합니다");
-  }
+  // 과거 시각도 허용 — '어제 회의 추가해줘' 같은 사후 기록 시나리오. LLM 이 저장 전에 한 번 더
+  // 사용자에게 "지나간 시각인데 일정으로 추가하나요?" 확인하도록 scheduler.md §3 에 룰 명시.
 
   // 충돌은 절대 허용 안 한다 — 사용자가 명시: "충돌이 절대 있어선 안 돼". UI 의 '그래도 만들기'
   // 우회 경로도 같이 제거됐다. 충돌이 있으면 항상 거부 + 대안 후보 반환.

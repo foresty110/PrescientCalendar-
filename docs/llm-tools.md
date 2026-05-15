@@ -17,7 +17,7 @@ Anthropic tool_use 정의의 단일 출처. 이 문서가 `src/lib/llm/tools.ts`
 ```json
 {
   "title": "string (required, 1..100자)",
-  "startAt": "ISO-8601 datetime (required, 미래)",
+  "startAt": "ISO-8601 datetime (required, 과거/미래 모두 허용 — 사후 기록 시 LLM 이 호출 전에 사용자 확인)",
   "durationMin": "integer 5..480 (required)",
   "recurrence": {
     "freq": "DAILY|WEEKLY|MONTHLY",
@@ -46,7 +46,7 @@ Anthropic tool_use 정의의 단일 출처. 이 문서가 `src/lib/llm/tools.ts`
 ```
 
 **주의**:
-- 과거 시각은 거부 → assistant가 재질문
+- 과거 시각도 받지만 사후 기록 (지나간 일정 추가) 의 경우 assistant 는 **호출 전에 사용자에게 한 번 더 확인** ("지나간 시각인데 일정에 추가할까요?"). 회고형 어조 ("했어/늦게 시작했어") 와 구분 — 그건 `record_actual_run`.
 - 충돌이 있으면 일정은 생성되지 않고 `ok: false` 결과 반환. 클라이언트가 자동으로 대안 카드 UI 를 렌더하므로 assistant 는 응답 텍스트를 비우거나 매우 짧은 한 마디만 (카드와 중복 회피).
 - **충돌 우회 옵션 없음.** force 같은 인자는 없다. 사용자가 "그래도 만들어줘" 라고 해도 다시 호출하지 말 것 — 항상 대안에서 선택해야 한다.
 

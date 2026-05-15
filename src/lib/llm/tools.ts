@@ -67,7 +67,7 @@ const recurrenceSchema = z
 export const createEventTool = defineTool({
   name: "create_event",
   description:
-    "사용자가 새 일정을 만들 때 호출. 과거 시각은 거부. " +
+    "사용자가 새 일정을 만들 때 호출. 과거 시각도 받지만 사후 기록은 LLM 이 호출 전에 한 번 더 사용자에게 확인해야 한다 (scheduler.md §3). " +
     "충돌이 있으면 일정은 생성되지 않고 ok=false 결과 + 대안 시각 후보를 반환한다. " +
     "클라이언트가 자동으로 대안 선택 카드를 렌더하므로 assistant 는 추가 텍스트 없이 카드만 보여줘도 된다 (또는 한 마디만). " +
     "충돌 우회 옵션은 없다 — 사용자가 '그래도 만들어줘' 라고 해도 다시 호출하지 말고 다른 시각을 고르도록 안내.",

@@ -280,13 +280,21 @@ export const Chat = forwardRef<ChatHandle, ChatProps>(function Chat(
               {m.feasibilityCards?.map((card, j) => (
                 <FeasibilityCard key={j} data={card} />
               ))}
-              {m.conflictCards?.map((card, j) => (
-                <ConflictAlternativesCard
-                  key={`conflict-${j}`}
-                  data={card}
-                  onPickAlternative={pickConflictAlternative}
-                />
-              ))}
+              {m.conflictCards?.map((card, j) => {
+                // 이 카드 등장 이후(인덱스 i 이후) user 메시지가 있으면 사용자가 이미 다른 주제로
+                // 넘어간 것 — 뒤늦은 대안 클릭이 새 충돌 turn 을 만드는 걸 막는다. 응답 대기 중에도 비활성.
+                const hasLaterUserTurn = messages
+                  .slice(i + 1)
+                  .some((mm) => mm.role === "user");
+                return (
+                  <ConflictAlternativesCard
+                    key={`conflict-${j}`}
+                    data={card}
+                    onPickAlternative={pickConflictAlternative}
+                    disabled={hasLaterUserTurn || isPending}
+                  />
+                );
+              })}
             </li>
           ),
         )}

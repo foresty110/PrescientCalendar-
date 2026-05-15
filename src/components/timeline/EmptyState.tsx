@@ -49,9 +49,6 @@ export function EmptyState({ onAddClick, onExampleClick, dateLabel = "오늘" }:
       )}
       {onExampleClick && (
         <div className="mt-1 flex w-full flex-col gap-1.5">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            예시 — 클릭하면 채팅에 채워져요
-          </p>
           <ul className="flex flex-col gap-1">
             {EXAMPLES.map((text) => (
               <li key={text}>

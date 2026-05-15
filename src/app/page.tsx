@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 
-const GITHUB_REPO_URL = "https://github.com/foresty110/PrescientCalendar-";
-const GITHUB_DECISIONS_URL = `${GITHUB_REPO_URL}/tree/main/docs/decisions`;
-
 export default async function LandingPage() {
   const session = await auth();
   const isAuthed = !!session?.user;
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-blue-50/60 via-white to-white px-6 dark:from-blue-950/20 dark:via-slate-950 dark:to-slate-950">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50/60 via-white to-white px-6 dark:from-blue-950/20 dark:via-slate-950 dark:to-slate-950">
       <section className="flex w-full max-w-2xl flex-col items-center text-center">
         <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl">
           이번 달에도
@@ -49,39 +46,7 @@ export default async function LandingPage() {
             </Link>
           )}
         </div>
-
-        <p className="mt-5 text-xs text-slate-400 dark:text-slate-500">
-          광고 없어요 <span aria-hidden>·</span> 코드 공개{" "}
-          <span aria-hidden>·</span> 사이드프로젝트
-        </p>
       </section>
-
-      <footer className="absolute inset-x-0 bottom-6 flex items-center justify-center gap-3 text-[11px] text-slate-400 dark:text-slate-500">
-        <a
-          href={GITHUB_REPO_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="hover:text-slate-600 dark:hover:text-slate-300"
-        >
-          GitHub
-        </a>
-        <span aria-hidden>·</span>
-        <Link
-          href="/api/docs"
-          className="hover:text-slate-600 dark:hover:text-slate-300"
-        >
-          API
-        </Link>
-        <span aria-hidden>·</span>
-        <a
-          href={GITHUB_DECISIONS_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="hover:text-slate-600 dark:hover:text-slate-300"
-        >
-          결정 기록
-        </a>
-      </footer>
     </main>
   );
 }

@@ -44,6 +44,22 @@ export interface ChatContextInput {
  * 자연스럽게 처리한다(plan §Step 4 참고). 같은 names+시각+컨텍스트면 결과 동일 →
  * 프롬프트 캐싱과 잘 맞음.
  */
+/** 모든 모드 공통 — 채팅 응답 포맷 규칙. 사용자가 '한 덩어리 평문' 으로 답이 와서 못 읽겠다고
+ *  피드백을 줘 이모지 금지 + 마크다운 구조화를 강제. 클라이언트는 react-markdown 으로 렌더한다. */
+const RESPONSE_FORMAT_RULES = `
+---
+## 응답 형식 규칙
+
+- **이모지 사용 금지.** 텍스트로만 표현한다. ✨🔥🎯 같은 기호도 안 쓴다.
+- **한 덩어리 평문 금지** — 클라이언트는 마크다운으로 렌더한다. 다음을 적극 활용:
+  - 핵심 단어·확정 시각·제목·소요는 \`**굵게**\`
+  - 항목 2개 이상이면 \`- \` 불릿 또는 \`1.\` 번호 매김
+  - 단락 사이엔 빈 줄 한 줄
+  - 통계·표 비교는 마크다운 테이블 사용 가능
+  - 시각/식별자 같은 짧은 코드는 인라인 \`코드\` 표기
+- 응답은 짧고 친근하게. 인사·서두 X. 본론으로 바로.
+`;
+
 export function buildSystemPrompt(
   names: PromptName | PromptName[],
   now: Date,
@@ -72,5 +88,5 @@ export function buildSystemPrompt(
         "도구 호출에 scheduledRunId 가 필요하면 위 값을 그대로 쓴다.",
     );
   }
-  return sections + contextLines.join("\n");
+  return sections + RESPONSE_FORMAT_RULES + contextLines.join("\n");
 }

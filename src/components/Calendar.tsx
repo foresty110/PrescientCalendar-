@@ -59,6 +59,12 @@ export function Calendar({
   const todayYm = formatInTimeZone(now, KST, "yyyy-MM");
   const isCurrentMonth = viewedYm === todayYm;
 
+  // 다른 달로 옮길 때 이전 달 카드를 잠깐 남기지 않도록 즉시 비운다. 그 직후 fetch useEffect
+  // 가 새 달을 가져온다. 같은 달 새로고침(refreshKey 갱신) 엔 stale 유지해 flicker 회피.
+  useEffect(() => {
+    setItems([]);
+  }, [viewedDate]);
+
   function shiftMonth(delta: number) {
     setViewedDate((prev) => addMonthsInKst(prev, delta));
   }
@@ -133,23 +139,53 @@ export function Calendar({
           >
             <span aria-hidden>›</span>
           </button>
-        </div>
-        <div className="flex items-center gap-2">
           {!isCurrentMonth && (
             <button
               type="button"
               onClick={jumpToToday}
-              className="rounded-md border border-slate-300 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              className="ml-1 rounded-md border border-slate-300 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               title="이번 달 + 오늘 날짜로 돌아가기"
             >
               오늘
             </button>
           )}
-          {loading && <span className="text-xs text-slate-400">로딩…</span>}
-          {error && <span className="text-xs text-red-500">{error}</span>}
         </div>
+        <ul
+          aria-label="일정 색상 안내"
+          className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400"
+        >
+          <li className="inline-flex items-center gap-1">
+            <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-500" />
+            완료
+          </li>
+          <li className="inline-flex items-center gap-1">
+            <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-amber-400 dark:bg-amber-500" />
+            지연
+          </li>
+          <li className="inline-flex items-center gap-1">
+            <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600" />
+            미만
+          </li>
+        </ul>
       </header>
 
+      {loading && items.length === 0 ? (
+        <div
+          className="flex flex-1 items-center justify-center gap-2 rounded border border-slate-200 bg-white py-16 text-[12px] text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <span
+            aria-hidden
+            className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-violet-500 dark:border-slate-700 dark:border-t-violet-400"
+          />
+          <span>{formatInTimeZone(viewedDate, KST, "yyyy년 M월")} 불러오는 중…</span>
+        </div>
+      ) : error ? (
+        <div className="flex flex-1 items-center justify-center rounded border border-red-200 bg-red-50 py-16 text-[12px] text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+          ⚠ {error}
+        </div>
+      ) : (
       <div className="grid flex-1 grid-cols-7 gap-px overflow-hidden rounded border border-slate-200 bg-slate-200 text-xs dark:border-slate-800 dark:bg-slate-800">
         {["월", "화", "수", "목", "금", "토", "일"].map((d) => (
           <div
@@ -238,6 +274,7 @@ export function Calendar({
           );
         })}
       </div>
+      )}
 
       <RetrospectModal
         target={retroTarget}

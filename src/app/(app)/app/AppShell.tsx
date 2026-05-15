@@ -52,6 +52,11 @@ export function AppShell() {
     chatRef.current?.focusInput();
   }
 
+  function handleEmptyStateExample(text: string) {
+    // 사용자가 보내기 전 수정 가능하도록 prefill 만 — send 자동 호출 안 함.
+    chatRef.current?.prefill(text, "예시에서 시작");
+  }
+
   return (
     <section className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_520px]">
       <div className="flex flex-col gap-4">
@@ -60,6 +65,7 @@ export function AppShell() {
           refreshKey={refreshKey}
           onSelect={handleTimelineCardSelect}
           onAddClick={handleTimelineAddClick}
+          onExampleClick={handleEmptyStateExample}
           selectedScheduledRunId={chatContext?.scheduledRunId ?? null}
         />
       </div>

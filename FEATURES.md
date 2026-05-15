@@ -38,7 +38,7 @@
 - 5.3 (Phase 3) — 서브항목 단위로 분리해 점진 진행
   - [x] 5.3-a 완료/회고 필요 일정 클릭 시 "어땠어?" 회고 흐름 분기 (`buildPrefill` in `AppShell.tsx`)
   - [x] 5.3-b 종일 일정 분리 영역 — `duration >= 22h` 휴리스틱 기반 (`docs/decisions/2026-05-15-all-day-events-heuristic.md`)
-  - [ ] 5.3-c 0건 빈 상태 UX 풀
+  - [x] 5.3-c 0건 빈 상태 UX 풀 — 아이콘 + 카피 + "+ 일정 추가" CTA + 예시 prefill 칩 3개 (`EmptyState.tsx`)
   - [ ] 5.3-d 풀 키보드 접근성
   - [ ] 5.3-e LLM 응답의 확률/신뢰도/요인 카드 UI
   - [ ] 5.3-f 시스템 프롬프트에 컨텍스트 일정 메타 주입

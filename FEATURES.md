@@ -48,5 +48,6 @@
 - [x] I.2 Vercel + Neon 배포 + Google OAuth prod 콜백 — prod URL `https://prescient-calendar.vercel.app` 동작, 6개 env × Production·Preview·Development 18개 등록, Google OAuth callback 등록 완료
 - [x] I.3 `/api/docs` Scalar 페이지 (공개 라우트) — Zod 스키마에서 OpenAPI 3.1 자동 생성, 미들웨어 공개 경로
 - [x] I.4 Playwright e2e (데스크탑 뷰포트) — 인증 주입 방식으로 3개 시나리오 통과 (공개 랜딩 / 보호 라우트 리다이렉트 / 인증된 대시보드 렌더). LLM 비용 회피 위해 채팅·일정 생성은 별도 PR로 mock 도입 시 확장 예정. CI 통합은 별도 PR
+- [x] I.5 데모용 "테스트 데이터 추가" 배너 — AppShell 최상단 배너 클릭 시 5개 시나리오(운동·출근·미팅·독서·산책) × 과거 8주 회고 + 미래 4주 ScheduledRun 일괄 생성. User.createdAt도 30일 전으로 조정해 cold-start(가입 14일·표본 5건) 가드 통과. 미래 인스턴스마다 feasibility 점수 후처리 계산. 인증된 사용자 본인 데이터만 만들어 prod 노출 가능.
 - [ ] I.6 README 데모 GIF + 스크린샷 + 결정·트러블슈팅 링크
 - [x] I.7 `docs/decisions/` 3개 이상, `docs/troubleshooting/` 2개 이상 — decisions 3개(다음 주 예측 제외·모바일 반응형 보류·pnpm 빌드 스크립트 차단), troubleshooting 4개

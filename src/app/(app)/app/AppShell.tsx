@@ -5,6 +5,7 @@ import { formatInTimeZone } from "date-fns-tz";
 
 import { Calendar } from "@/components/Calendar";
 import { Chat, type ChatContext, type ChatHandle } from "@/components/Chat";
+import { SeedTestDataBanner } from "@/components/SeedTestDataBanner";
 import { TodayTimeline } from "@/components/timeline/TodayTimeline";
 import type { ScheduleCardItem } from "@/components/timeline/ScheduleCard";
 import type { TimelineStatus } from "@/components/timeline/status";
@@ -59,23 +60,26 @@ export function AppShell() {
   }
 
   return (
-    <section className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_520px]">
-      <div className="flex flex-col gap-4">
-        <Calendar refreshKey={refreshKey} />
-        <TodayTimeline
-          refreshKey={refreshKey}
-          onSelect={handleTimelineCardSelect}
-          onAddClick={handleTimelineAddClick}
-          onExampleClick={handleEmptyStateExample}
-          selectedScheduledRunId={chatContext?.scheduledRunId ?? null}
+    <section className="flex flex-1 flex-col gap-4">
+      <SeedTestDataBanner onSeeded={() => setRefreshKey((k) => k + 1)} />
+      <div className="grid flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_520px]">
+        <div className="flex flex-col gap-4">
+          <Calendar refreshKey={refreshKey} />
+          <TodayTimeline
+            refreshKey={refreshKey}
+            onSelect={handleTimelineCardSelect}
+            onAddClick={handleTimelineAddClick}
+            onExampleClick={handleEmptyStateExample}
+            selectedScheduledRunId={chatContext?.scheduledRunId ?? null}
+          />
+        </div>
+        <Chat
+          ref={chatRef}
+          onCompletion={() => setRefreshKey((k) => k + 1)}
+          context={chatContext}
+          onContextClear={() => setChatContext(null)}
         />
       </div>
-      <Chat
-        ref={chatRef}
-        onCompletion={() => setRefreshKey((k) => k + 1)}
-        context={chatContext}
-        onContextClear={() => setChatContext(null)}
-      />
     </section>
   );
 }

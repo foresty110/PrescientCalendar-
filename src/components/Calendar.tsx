@@ -30,6 +30,8 @@ interface CalendarProps {
   onDateSelect: (dateKey: string) => void;
   /** '오늘' 버튼 클릭 시 호출 — 부모가 selectedDateKey 를 오늘로 리셋 (캘린더 자체는 viewedDate 도 같이 리셋). */
   onJumpToToday?: () => void;
+  /** 회고 저장 등 데이터가 바뀌었을 때 호출 — 부모가 전역 refreshKey 를 올려 캘린더·타임라인을 함께 재조회. */
+  onDataChange?: () => void;
 }
 
 export function Calendar({
@@ -37,6 +39,7 @@ export function Calendar({
   selectedDateKey,
   onDateSelect,
   onJumpToToday,
+  onDataChange,
 }: CalendarProps) {
   // now: 첫 마운트 시 "오늘"의 시각 참조 (isToday 비교·과거 일정 disabled 판정용). 자정 넘기 전까진 안정적.
   // viewedDate: 화면이 보여주는 달의 어느 한 시점 — ← → 로 이동 / '오늘' 으로 리셋.
@@ -45,7 +48,6 @@ export function Calendar({
   const [items, setItems] = useState<ScheduledRunItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [localRefresh, setLocalRefresh] = useState(0);
   const [retroTarget, setRetroTarget] = useState<RetrospectModalTarget | null>(null);
 
   // ISO 문자열로 메모이즈 — Date 객체 ID 안정화 (무한 refetch 방지). viewedDate 가 바뀌면 새 달 fetch.
@@ -101,7 +103,7 @@ export function Calendar({
     return () => {
       cancelled = true;
     };
-  }, [range, refreshKey, localRefresh]);
+  }, [range, refreshKey]);
 
   const days = monthGrid(viewedDate);
 
@@ -331,7 +333,7 @@ export function Calendar({
       <RetrospectModal
         target={retroTarget}
         onClose={() => setRetroTarget(null)}
-        onSaved={() => setLocalRefresh((k) => k + 1)}
+        onSaved={() => onDataChange?.()}
       />
     </div>
   );

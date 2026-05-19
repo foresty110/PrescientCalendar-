@@ -81,6 +81,7 @@ export function AppShell() {
             selectedDateKey={selectedDateKey}
             onDateSelect={setSelectedDateKey}
             onJumpToToday={handleCalendarJumpToToday}
+            onDataChange={() => setRefreshKey((k) => k + 1)}
           />
           <TodayTimeline
             refreshKey={refreshKey}

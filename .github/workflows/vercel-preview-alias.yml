@@ -1,0 +1,49 @@
+name: Vercel preview alias
+
+# Vercel 의 미리보기 배포가 끝나면 GitHub 에 deployment_status 가 success 로 보고된다.
+# 그 시점에 고정 별칭(prescient-calendar-preview.vercel.app)을 그 배포로 옮겨, "최신
+# 미리보기" 가 항상 같은 URL 에서 보이게 한다. 폴링·중복 배포 없음.
+#
+# 필요한 GitHub Secrets:
+# - VERCEL_TOKEN: Vercel 계정/팀 토큰 (Account Settings → Tokens)
+# - VERCEL_ORG_ID: Vercel Team(또는 User) ID
+# - VERCEL_PROJECT_ID: Vercel 프로젝트 ID
+# 셋 다 Vercel 프로젝트 Settings → General 페이지 하단·Account Settings 에서 확인.
+
+on:
+  deployment_status:
+
+jobs:
+  alias:
+    # 프로덕션('prescient-calendar.vercel.app' 고정) 은 건드리지 않는다. 미리보기만 대상.
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment_status.environment != 'Production'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      # vercel pull 로 프로젝트 컨텍스트(.vercel/project.json)를 만들어 둬야 alias 명령이 팀을 찾는다.
+      - name: Link Vercel project context
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Point fixed alias at this preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          DEPLOYMENT="${{ github.event.deployment_status.environment_url }}"
+          if [ -z "$DEPLOYMENT" ]; then
+            echo "::warning::environment_url 비어있음 — 이번 배포는 alias 안 함"
+            exit 0
+          fi
+          vercel alias set "$DEPLOYMENT" prescient-calendar-preview.vercel.app \
+            --token="$VERCEL_TOKEN"

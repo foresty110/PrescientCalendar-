@@ -44,3 +44,9 @@ prisma/migrations/dev-*/
 # Vercel env 셋업 스크립트 — 실제 토큰·시크릿 채워진 파일은 커밋 금지 (.example 만 커밋)
 scripts/setup-vercel-env-*.sh
 !scripts/setup-vercel-env-*.sh.example
+
+# Claude Code 로컬 설정 (권한·개인 설정)
+.claude/settings.local.json
+
+# Playwright MCP 캡처 결과물
+.playwright-mcp/

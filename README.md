@@ -54,6 +54,31 @@ erDiagram
 
 `Event`(반복 규칙 포함 템플릿)와 `ScheduledRun`(특정 시점 인스턴스)을 분리한 게 핵심. 인스턴스 단위로 회고와 실현 가능성 점수가 1:1 매핑된다.
 
+## 아키텍처
+
+```
+브라우저 (React)
+│  Calendar · Chat · Timeline 컴포넌트
+│
+▼  POST /api/chat
+Route Handler  ←  Auth.js 세션 검증
+│
+▼
+agent.ts  —  멀티턴 tool_use 루프
+│              Claude가 tool_use를 반환하면 실행 후 다시 호출,
+│              text만 반환하면 종료
+▼  tool_use
+tools.ts  —  Zod 스키마 검증 + userId 소유권 확인
+│
+▼
+src/lib/db/  —  Prisma 함수 (라우트 핸들러가 직접 접근하는 유일한 DB 레이어)
+│
+▼
+Postgres (Neon)
+```
+
+채팅 한 줄이 들어오면 Claude가 필요한 도구(일정 생성 / 회고 기록 / 패턴 조회 등)를 직접 선택해 호출한다. 도구 결과를 다시 Claude에게 넘기는 루프를 반복하다가, 더 이상 도구 호출 없이 텍스트만 돌아오면 응답으로 내보낸다.
+
 ## 스택
 
 | 영역 | 기술 |

@@ -6,11 +6,10 @@
 
 [![CI](https://github.com/foresty110/PrescientCalendar-/actions/workflows/ci.yml/badge.svg)](https://github.com/foresty110/PrescientCalendar-/actions/workflows/ci.yml) [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-**[배포 운영중](https://prescient-calendar.vercel.app)** (Google 계정으로 로그인)
+**[라이브 데모 →](https://prescient-calendar.vercel.app)** (Google 계정으로 로그인)
 
-> 로그인 후 우상단 **"테스트 데이터 추가"** 버튼을 누르면 샘플 일정 데이터를 추가해서 기능을 바로 사용해볼 수 있습니다.
+> 로그인 후 우상단 **"테스트 데이터 추가"** 버튼을 누르면 샘플 일정·회고가 깔려서 기능을 바로 둘러볼 수 있다.
 
-![스크린샷](assets/screenshot.png)
 <img width="1204" height="735" alt="image" src="https://github.com/user-attachments/assets/7937412e-c3dd-4297-90f7-cda8bf0e3639" />
 
 </div>
